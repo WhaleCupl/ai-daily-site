@@ -56,6 +56,13 @@ curl -s https://www.aidailyinsights.cn/feed.xml      # RSS 订阅 / 轮询</code
 }`}</code></pre>
     <p>提供三个工具：<code>list_latest</code>（最近 N 期）、<code>get_article</code>（按日期取单期结构化正文）、<code>search</code>（跨期关键词检索）。源码与文档见 <a href="https://www.npmjs.com/package/ai-daily-insights-mcp">npm</a> / <a href="https://github.com/WhaleCupl/ai-daily-insights-mcp">GitHub</a>。</p>
 
+    <h2>❯ 在终端里读（CLI）</h2>
+    <p>如果你更习惯命令行，用 <code>ai-daily-insights</code> 这个 CLI 直接在终端速览，无需打开浏览器：</p>
+    <pre><code>npx ai-daily-insights latest          # 最近 5 期
+npx ai-daily-insights show 2026-06-24 # 某期全部新闻 + signal
+npx ai-daily-insights search Anthropic # 跨期检索</code></pre>
+    <p>和 MCP 共用同一套公开 JSON 接口，无需登录。源码见 <a href="https://www.npmjs.com/package/ai-daily-insights">npm</a> / <a href="https://github.com/WhaleCupl/ai-daily-insights-cli">GitHub</a>。</p>
+
     <h2>❯ Agent 调用协议</h2>
     <ul>
       <li><strong>发现入口：</strong><code>/llms.txt</code>，给 Agent 的站点说明和主要端点。</li>
