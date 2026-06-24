@@ -6,3 +6,6 @@ dist/
 .env.*
 .dev.vars
 .DS_Store
+
+.astro/
+.claude/
