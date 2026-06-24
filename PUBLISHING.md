@@ -61,3 +61,21 @@ cover: /covers/2026-06-25.jpg   # 可省略，默认就是 /covers/<日期>.jpg
 | `/llms.txt` | 给 AI 的站点说明 + 端点清单 |
 
 这就是后面做 MCP / CLI 的数据源 —— 它们只需 fetch 这些公开 URL。
+
+## 从微信公众号搬旧文章
+
+`tools/wechat-to-md.mjs` 把公众号文章链接直接转成 `src/content/daily/<日期>.md`（只取标题/日期/正文文字 + 文末 hashtag 标签，**图片全部丢弃**；兼容三种历史排版变体，自带限频重试）。
+
+```bash
+# 预览（不写文件）
+node tools/wechat-to-md.mjs --dry "https://mp.weixin.qq.com/s/xxxx"
+
+# 实际落库（可一次给多个链接，同一天会自动去重/覆盖）
+node tools/wechat-to-md.mjs "https://mp.weixin.qq.com/s/aaa" "https://mp.weixin.qq.com/s/bbb"
+
+# 然后照常发布
+npm run build && npm run deploy
+```
+
+注意：同一篇文章短时间重复抓会被微信限频，工具会自动重试一次；批量很多篇时建议分几次跑。
+
