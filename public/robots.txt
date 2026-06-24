@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.aidailyinsights.cn/sitemap.xml
+# Agent-facing guide: https://www.aidailyinsights.cn/llms.txt

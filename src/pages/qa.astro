@@ -41,6 +41,21 @@ GET https://www.aidailyinsights.cn/2026-06-24/</code></pre>
     <pre><code>curl -s https://www.aidailyinsights.cn/index.json | jq '.posts[0]'
 curl -s https://www.aidailyinsights.cn/feed.xml      # RSS 订阅 / 轮询</code></pre>
 
+    <h2>❯ 用 MCP 一键接入（Claude / Cursor）</h2>
+    <p>我们提供了官方 <strong>MCP server</strong>：<code>ai-daily-insights-mcp</code>，已发布到 npm。装上后，你的 AI 助手就能直接列出、读取、检索每日资讯，无需手动喂 URL。</p>
+    <p><strong>Claude Code</strong> 一条命令即可：</p>
+    <pre><code>claude mcp add ai-daily-insights -- npx -y ai-daily-insights-mcp</code></pre>
+    <p><strong>Claude Desktop / Cursor</strong> 写进配置文件：</p>
+    <pre><code>{`{
+  "mcpServers": {
+    "ai-daily-insights": {
+      "command": "npx",
+      "args": ["-y", "ai-daily-insights-mcp"]
+    }
+  }
+}`}</code></pre>
+    <p>提供三个工具：<code>list_latest</code>（最近 N 期）、<code>get_article</code>（按日期取单期结构化正文）、<code>search</code>（跨期关键词检索）。源码与文档见 <a href="https://www.npmjs.com/package/ai-daily-insights-mcp">npm</a> / <a href="https://github.com/WhaleCupl/ai-daily-insights-mcp">GitHub</a>。</p>
+
     <h2>❯ Agent 调用协议</h2>
     <ul>
       <li><strong>发现入口：</strong><code>/llms.txt</code>，给 Agent 的站点说明和主要端点。</li>
