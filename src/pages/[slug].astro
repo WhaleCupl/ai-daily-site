@@ -8,10 +8,39 @@ export function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const html = articleHtml[post.slug];
+const rawHtml = articleHtml[post.slug].replaceAll('<strong>signal ·</strong>', '<strong>signal:</strong>');
+const navItems: { id: string; title: string }[] = [];
+let headingIndex = 0;
+const html = rawHtml.replace(/<h2([^>]*)>([\s\S]*?)<\/h2>/g, (match, attrs, content) => {
+  headingIndex += 1;
+  const existingId = attrs.match(/\sid="([^"]+)"/)?.[1];
+  const id = existingId || `news-${String(headingIndex).padStart(2, '0')}`;
+  const title = content
+    .replace(/<[^>]+>/g, '')
+    .replace(/^❯\s*/, '')
+    .trim();
+  navItems.push({ id, title });
+  return existingId ? match : `<h2${attrs} id="${id}">${content}</h2>`;
+});
 ---
 
 <Layout title={`${post.title} · AI Daily Insights`} description={post.summary}>
   <a class="crumb" href="/"><span class="pr">cd</span>..</a>
+  {navItems.length > 1 && (
+    <nav class="article-index" aria-label="今日新闻导航">
+      <div class="cmd"><span class="pr">&gt;</span>tree ./today <span class="flag">--depth=1</span></div>
+      <ol>
+        {navItems.map((item, index) => (
+          <li>
+            <a href={`#${item.id}`}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              {item.title}
+            </a>
+          </li>
+        ))}
+      </ol>
+      <div class="index-status">// AI Daily index · output: reading_queue · status: ready</div>
+    </nav>
+  )}
   <article class="md" set:html={html} />
 </Layout>
