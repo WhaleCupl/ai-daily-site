@@ -11,6 +11,7 @@ const daily = defineCollection({
     summary: z.string(),
     tags: z.array(z.string()).default([]),
     cover: z.string().optional(),
+    source: z.string().optional(),
   }),
 });
 

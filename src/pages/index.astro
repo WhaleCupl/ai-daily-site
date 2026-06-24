@@ -2,20 +2,23 @@
 import Layout from '../layouts/Layout.astro';
 import { getSortedPosts } from '../posts';
 
-const posts = await getSortedPosts();
+const allPosts = await getSortedPosts();
+const RECENT = 30;
+const posts = allPosts.slice(0, RECENT);
+const hasMore = allPosts.length > RECENT;
 ---
 
 <Layout>
   <section class="hero">
     <h1 class="brand">AI Daily Insights<span class="cursor"></span></h1>
     <p class="slogan">每日 AI 资讯 · 为人与 Agent 而生</p>
-    <div class="bootline"><span class="dotk"></span>system ready · {posts.length} entries indexed · last sync {posts[0].data.date} · booted in 0.08s</div>
+    <div class="bootline"><span class="dotk"></span>system ready · {allPosts.length} entries indexed · last sync {posts[0].data.date} · booted in 0.08s</div>
   </section>
 
   <hr class="rule" />
 
   <div class="cmd"><span class="pr">$</span>ls ./news <span class="flag">--sort=date</span></div>
-  <div class="listhdr"><span>date</span><span>./news/*.md &nbsp; ({posts.length} entries)</span></div>
+  <div class="listhdr"><span>date</span><span>./news/*.md &nbsp; ({allPosts.length} entries)</span></div>
 
   {posts.map((post) => (
     <a class="news-row" href={`/${post.id}/`}>
@@ -27,6 +30,12 @@ const posts = await getSortedPosts();
       <div class="stat">[parsed]</div>
     </a>
   ))}
+
+  {hasMore && (
+    <a class="more-row" href="/archive/">
+      <span class="pr">$</span>ls ./news --all<span class="more-x"> · 查看全部 {allPosts.length} 期 →</span>
+    </a>
+  )}
 
   <section class="usebar">
     <div class="use-label">// 怎么用 — 三种入口，按你是谁选一个</div>

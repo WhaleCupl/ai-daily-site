@@ -1,0 +1,40 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getSortedPosts } from '../../posts';
+
+const posts = await getSortedPosts();
+
+// group by year-month for a scannable archive
+const groups: { key: string; items: typeof posts }[] = [];
+for (const post of posts) {
+  const key = post.data.date.slice(0, 7);
+  let g = groups.find((x) => x.key === key);
+  if (!g) {
+    g = { key, items: [] };
+    groups.push(g);
+  }
+  g.items.push(post);
+}
+---
+
+<Layout title="归档 · AI Daily Insights" description="AI Daily Insights 全部往期资讯归档">
+  <a class="backnav" href="/">
+    <span class="back-arrow">←</span>
+    <span class="back-label">返回 AI Daily 首页</span>
+    <span class="back-cmd">cd ~/news</span>
+  </a>
+  <div class="cmd"><span class="pr">$</span>ls -R ./news <span class="flag">--all</span></div>
+  <div class="listhdr"><span>全部归档</span><span>{posts.length} 期</span></div>
+
+  {groups.map((g) => (
+    <section class="arc-group">
+      <div class="arc-month">{g.key.replace('-', ' / ')}</div>
+      {g.items.map((post) => (
+        <a class="arc-row" href={`/${post.id}/`}>
+          <span class="arc-date">{post.data.date.slice(8)}</span>
+          <span class="arc-title">{post.data.title}</span>
+        </a>
+      ))}
+    </section>
+  ))}
+</Layout>

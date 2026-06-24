@@ -2,7 +2,7 @@ import { getSortedPosts, SITE } from '../posts';
 
 export async function GET() {
   const posts = await getSortedPosts();
-  const staticUrls = ['/', '/qa/'];
+  const staticUrls = ['/', '/qa/', '/archive/'];
 
   const urls = [
     ...staticUrls.map((path) => ({ loc: `${SITE}${path}`, lastmod: posts[0]?.data.date })),
