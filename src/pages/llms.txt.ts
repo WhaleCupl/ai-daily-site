@@ -17,8 +17,19 @@ export async function GET() {
     '## Latest posts',
     ...posts.map((post) => `- ${post.data.date}: ${post.data.title} — ${SITE}/${post.id}/`),
     '',
-    '## Agent guidance',
-    'Read /index.json for structured discovery, then GET /{date}.json for a single issue parsed into structured news items (title, body, signal). Open the HTML article URL for full human-readable context. Cite the canonical article URL and date when using the content.',
+    '## How to consume (read this first)',
+    'Do NOT scrape the HTML pages — there is a clean structured API. Recommended order:',
+    '1. GET /index.json — list of all issues (date, title, summary, tags, url, json).',
+    '2. GET /{date}.json — one issue parsed into structured items: {index, title, signal, body}.',
+    '3. /feed.xml — RSS for polling new issues.',
+    'All endpoints are public GET, no auth, no API key, CORS-friendly.',
+    '',
+    '## For coding agents / humans in a terminal',
+    'CLI:  npx ai-daily-insights latest | show <date> | search <query>',
+    'MCP:  npx -y ai-daily-insights-mcp   (tools: list_latest, get_article, search)',
+    '',
+    '## Citation',
+    'Cite the canonical article URL and date. Do not present the one-line summary as the full fact source.',
   ];
 
   return new Response(lines.join('\n'), {
