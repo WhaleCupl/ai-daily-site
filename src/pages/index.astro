@@ -1,13 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { posts } from '../data';
+import { getSortedPosts } from '../posts';
+
+const posts = await getSortedPosts();
 ---
 
 <Layout>
   <section class="hero">
     <h1 class="brand">AI Daily Insights<span class="cursor"></span></h1>
     <p class="slogan">每日 AI 资讯 · 为人与 Agent 而生</p>
-    <div class="bootline"><span class="dotk"></span>system ready · {posts.length} entries indexed · last sync {posts[0].date} · booted in 0.08s</div>
+    <div class="bootline"><span class="dotk"></span>system ready · {posts.length} entries indexed · last sync {posts[0].data.date} · booted in 0.08s</div>
   </section>
 
   <hr class="rule" />
@@ -16,11 +18,11 @@ import { posts } from '../data';
   <div class="listhdr"><span>date</span><span>./news/*.md &nbsp; ({posts.length} entries)</span></div>
 
   {posts.map((post) => (
-    <a class="news-row" href={`/${post.slug}/`}>
-      <div class="news-date">{post.date}</div>
+    <a class="news-row" href={`/${post.id}/`}>
+      <div class="news-date">{post.data.date}</div>
       <div>
-        <div class="nt">{post.title}</div>
-        <div class="ns">{post.summary}</div>
+        <div class="nt">{post.data.title}</div>
+        <div class="ns">{post.data.summary}</div>
       </div>
       <div class="stat">[parsed]</div>
     </a>

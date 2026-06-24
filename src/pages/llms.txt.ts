@@ -1,22 +1,24 @@
-import { posts } from '../data';
+import { getSortedPosts, SITE } from '../posts';
 
-export function GET() {
+export async function GET() {
+  const posts = await getSortedPosts();
   const lines = [
     '# AI Daily Insights',
     '',
     'AI Daily Insights is a Chinese daily AI briefing site designed for both human readers and AI agents.',
     '',
     '## Primary endpoints',
-    '- Home: https://www.aidailyinsights.cn/',
-    '- Q&A and agent guide: https://www.aidailyinsights.cn/qa/',
-    '- JSON index: https://www.aidailyinsights.cn/index.json',
-    '- RSS feed: https://www.aidailyinsights.cn/feed.xml',
+    `- Home: ${SITE}/`,
+    `- Q&A and agent guide: ${SITE}/qa/`,
+    `- JSON index: ${SITE}/index.json`,
+    `- RSS feed: ${SITE}/feed.xml`,
+    `- Per-article JSON: ${SITE}/{date}.json  (e.g. ${SITE}/${posts[0]?.id}.json)`,
     '',
     '## Latest posts',
-    ...posts.map((post) => `- ${post.date}: ${post.title} — https://www.aidailyinsights.cn/${post.slug}/`),
+    ...posts.map((post) => `- ${post.data.date}: ${post.data.title} — ${SITE}/${post.id}/`),
     '',
     '## Agent guidance',
-    'Read /index.json for structured discovery. Open individual article URLs for full context. Cite the canonical article URL and date when using the content.',
+    'Read /index.json for structured discovery, then GET /{date}.json for a single issue parsed into structured news items (title, body, signal). Open the HTML article URL for full human-readable context. Cite the canonical article URL and date when using the content.',
   ];
 
   return new Response(lines.join('\n'), {

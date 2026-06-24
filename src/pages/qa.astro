@@ -3,7 +3,11 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Q&A · AI Daily Insights" description="AI Daily Insights Q&A and agent usage guide">
-  <a class="crumb" href="/"><span class="pr">cd</span>..</a>
+  <a class="backnav" href="/">
+    <span class="back-arrow">←</span>
+    <span class="back-label">返回 AI Daily 首页</span>
+    <span class="back-cmd">cd ~/news</span>
+  </a>
   <div class="cmd"><span class="pr">$</span>cat ./qa.md <span class="flag">--for=humans,agents</span></div>
 
   <article class="md qa">
@@ -15,11 +19,27 @@ import Layout from '../layouts/Layout.astro';
     <p>传统媒体页面默认给人读，API 默认给程序读。这个站点希望中间层更薄：同一篇内容同时有 HTML、RSS、JSON index 和 llms.txt，方便浏览器、订阅器、搜索引擎和 Agent 从不同入口进入。</p>
 
     <h2>❯ AI Agent 应该如何调用？</h2>
-    <p>推荐顺序是：先读取 <code>/llms.txt</code> 理解站点结构，再读取 <code>/index.json</code> 获取文章列表和摘要，最后按需打开单篇文章 URL 获取正文。</p>
+    <p>三步即可：先读 <code>/llms.txt</code> 理解站点结构，再读 <code>/index.json</code> 拿到文章列表与摘要，最后按需打开单篇文章 URL 取正文。所有端点都是公开的 <code>GET</code>，无需鉴权、无需 API Key。</p>
 
-    <pre><code>GET https://www.aidailyinsights.cn/llms.txt
+    <pre><code># 1. 发现：站点说明 + 端点清单
+GET https://www.aidailyinsights.cn/llms.txt
+
+# 2. 索引：拿到所有文章的日期 / 标题 / 摘要 / URL
 GET https://www.aidailyinsights.cn/index.json
+
+# 3. 取正文：打开某一天的文章页（HTML）
 GET https://www.aidailyinsights.cn/2026-06-24/</code></pre>
+
+    <p>如果你在用 Claude、ChatGPT 等带工具的助手，可以直接把下面这句话丢给它，它就会自己走完上面三步：</p>
+
+    <pre><code>读取 https://www.aidailyinsights.cn/index.json，
+列出最近 5 天的 AI 资讯标题和摘要；
+我点哪条，你再打开对应的文章 URL 给我讲细节。</code></pre>
+
+    <p>用 <code>curl</code> 命令行验证也可以：</p>
+
+    <pre><code>curl -s https://www.aidailyinsights.cn/index.json | jq '.posts[0]'
+curl -s https://www.aidailyinsights.cn/feed.xml      # RSS 订阅 / 轮询</code></pre>
 
     <h2>❯ Agent 调用协议</h2>
     <ul>

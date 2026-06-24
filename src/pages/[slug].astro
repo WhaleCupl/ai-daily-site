@@ -1,31 +1,57 @@
 ---
+import { render } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { posts } from '../data';
-import { articleHtml } from '../article-html';
+import { getSortedPosts } from '../posts';
 
-export function getStaticPaths() {
-  return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+export async function getStaticPaths() {
+  const posts = await getSortedPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
 }
 
 const { post } = Astro.props;
-const rawHtml = articleHtml[post.slug].replaceAll('<strong>signal ·</strong>', '<strong>signal:</strong>');
-const navItems: { id: string; title: string }[] = [];
-let headingIndex = 0;
-const html = rawHtml.replace(/<h2([^>]*)>([\s\S]*?)<\/h2>/g, (match, attrs, content) => {
-  headingIndex += 1;
-  const existingId = attrs.match(/\sid="([^"]+)"/)?.[1];
-  const id = existingId || `news-${String(headingIndex).padStart(2, '0')}`;
-  const title = content
-    .replace(/<[^>]+>/g, '')
-    .replace(/^❯\s*/, '')
-    .trim();
-  navItems.push({ id, title });
-  return existingId ? match : `<h2${attrs} id="${id}">${content}</h2>`;
-});
+const { date, title, summary, tags, cover } = post.data;
+const { Content, headings } = await render(post);
+
+const coverSrc = cover ?? `/covers/${post.id}.jpg`;
+const navItems = headings
+  .filter((h) => h.depth === 2)
+  .map((h) => ({ id: h.slug, title: h.text.replace(/^❯\s*/, '').trim() }));
 ---
 
-<Layout title={`${post.title} · AI Daily Insights`} description={post.summary}>
-  <a class="crumb" href="/"><span class="pr">cd</span>..</a>
+<Layout title={`${title} · AI Daily Insights`} description={summary}>
+  <a class="backnav" href="/">
+    <span class="back-arrow">←</span>
+    <span class="back-label">返回 AI Daily 首页</span>
+    <span class="back-cmd">cd ~/news</span>
+  </a>
+
+  <div class="md article-head">
+    <div class="meta">
+      <span>{date}</span>
+      {tags.map((tag) => (
+        <>
+          <span class="sep">·</span>
+          <span class="tag">#{tag}</span>
+        </>
+      ))}
+      <span class="sep">·</span>
+      <span class="st">status: parsed</span>
+    </div>
+    <figure class="cover-slot">
+      <img
+        src={coverSrc}
+        alt={`${title} 封面图`}
+        loading="eager"
+        onload="this.closest('.cover-slot').classList.add('has-cover')"
+        onerror="this.closest('.cover-slot').classList.add('empty'); this.remove()"
+      />
+      <figcaption>
+        <span class="cover-k">cover slot</span>
+        <span>上传封面图到 <code>public{coverSrc}</code></span>
+      </figcaption>
+    </figure>
+  </div>
+
   {navItems.length > 1 && (
     <nav class="article-index" aria-label="今日新闻导航">
       <div class="cmd"><span class="pr">&gt;</span>tree ./today <span class="flag">--depth=1</span></div>
@@ -42,5 +68,8 @@ const html = rawHtml.replace(/<h2([^>]*)>([\s\S]*?)<\/h2>/g, (match, attrs, cont
       <div class="index-status">// AI Daily index · output: reading_queue · status: ready</div>
     </nav>
   )}
-  <article class="md" set:html={html} />
+
+  <article class="md">
+    <Content />
+  </article>
 </Layout>
