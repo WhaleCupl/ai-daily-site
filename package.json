@@ -1,0 +1,19 @@
+{
+  "name": "ai-daily-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name ai-daily-site --branch main"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.12",
+    "astro": "^5.13.5"
+  },
+  "devDependencies": {
+    "wrangler": "^4.40.2"
+  }
+}

@@ -1,0 +1,39 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Q&A · AI Daily Insights" description="AI Daily Insights Q&A and agent usage guide">
+  <a class="crumb" href="/"><span class="pr">cd</span>..</a>
+  <div class="cmd"><span class="pr">$</span>cat ./qa.md <span class="flag">--for=humans,agents</span></div>
+
+  <article class="md qa">
+    <h1>❯ AI Daily Insights 是什么？</h1>
+    <p><strong>AI Daily Insights</strong> 是一个面向人和 AI Agent 的每日 AI 资讯站。它不只把新闻写成人能快速扫读的文章，也把同一批内容整理成机器可发现、可引用、可检索的入口。</p>
+    <p>核心目标很简单：人打开网页时，看到判断、脉络和信号；Agent 调用时，能拿到稳定 URL、结构化索引和明确的引用边界。</p>
+
+    <h2>❯ 为什么叫“为人与 Agent 而生”？</h2>
+    <p>传统媒体页面默认给人读，API 默认给程序读。这个站点希望中间层更薄：同一篇内容同时有 HTML、RSS、JSON index 和 llms.txt，方便浏览器、订阅器、搜索引擎和 Agent 从不同入口进入。</p>
+
+    <h2>❯ AI Agent 应该如何调用？</h2>
+    <p>推荐顺序是：先读取 <code>/llms.txt</code> 理解站点结构，再读取 <code>/index.json</code> 获取文章列表和摘要，最后按需打开单篇文章 URL 获取正文。</p>
+
+    <pre><code>GET https://www.aidailyinsights.cn/llms.txt
+GET https://www.aidailyinsights.cn/index.json
+GET https://www.aidailyinsights.cn/2026-06-24/</code></pre>
+
+    <h2>❯ Agent 调用协议</h2>
+    <ul>
+      <li><strong>发现入口：</strong><code>/llms.txt</code>，给 Agent 的站点说明和主要端点。</li>
+      <li><strong>索引入口：</strong><code>/index.json</code>，包含日期、标题、摘要和文章 URL。</li>
+      <li><strong>订阅入口：</strong><code>/feed.xml</code>，适合自动更新和轮询。</li>
+      <li><strong>引用规则：</strong>引用时保留文章 URL、发布日期和标题，不把摘要当成完整事实来源。</li>
+    </ul>
+
+    <blockquote>
+      <p><strong>signal</strong> 对 Agent 来说，这个站点不是“网页外观优先”的内容库，而是“可被发现、可被引用、可被组合”的资讯节点。</p>
+    </blockquote>
+
+    <h2>❯ 之后可以继续增强什么？</h2>
+    <p>下一步可以增加每篇文章的 JSON 版本，例如 <code>/2026-06-24/index.json</code>，把标题、摘要、正文段落、关键词、来源链接和更新时间拆开。这样 Agent 就不用解析 HTML，也能稳定抽取内容。</p>
+  </article>
+</Layout>

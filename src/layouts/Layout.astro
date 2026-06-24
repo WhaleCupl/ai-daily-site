@@ -1,0 +1,74 @@
+---
+import '../styles/cli.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'AI Daily Insights',
+  description = 'AI Daily Insights — 每日 AI 资讯，为人与 Agent 而生',
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title="AI Daily Insights" href="/feed.xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="term mono" id="term" data-theme="auto">
+      <div class="window">
+        <div class="titlebar">
+          <a class="path" href="/">~/ai-daily-insights</a>
+          <nav class="topnav" aria-label="Primary">
+            <a href="/">news</a>
+            <a href="/qa/">q&a</a>
+          </nav>
+          <div class="theme-seg" role="group" aria-label="Theme">
+            <button class="tbtn" type="button" data-theme-choice="light">light</button>
+            <button class="tbtn" type="button" data-theme-choice="dark">dark</button>
+            <button class="tbtn" type="button" data-theme-choice="auto">auto</button>
+          </div>
+        </div>
+        <main class="stage">
+          <slot />
+        </main>
+      </div>
+      <footer class="term-footer">
+        aidailyinsights.cn · 为人与 Agent 而生 · <a href="/qa/">Q&A</a> · <a href="/llms.txt">llms.txt</a>
+      </footer>
+    </div>
+    <script>
+      (function () {
+        var KEY = "adi-theme", order = ["auto", "light", "dark"];
+        var term = document.getElementById("term");
+        var btns = Array.prototype.slice.call(document.querySelectorAll("[data-theme-choice]"));
+        var t = localStorage.getItem(KEY) || "auto";
+        function apply(v) {
+          term.dataset.theme = v;
+          btns.forEach(function (btn) {
+            btn.setAttribute("aria-pressed", btn.dataset.themeChoice === v ? "true" : "false");
+          });
+        }
+        apply(t);
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            t = btn.dataset.themeChoice || "auto";
+            localStorage.setItem(KEY, t);
+            apply(t);
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

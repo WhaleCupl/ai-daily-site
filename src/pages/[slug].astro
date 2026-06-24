@@ -1,0 +1,31 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { posts } from '../data';
+
+export function getStaticPaths() {
+  return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+---
+
+<Layout title={`${post.title} · AI Daily Insights`} description={post.summary}>
+  <a class="crumb" href="/"><span class="pr">cd</span>..</a>
+  <article class="md">
+    <div class="meta">
+      <span>{post.date}</span><span class="sep">·</span><span class="tag">AI Daily Insights</span><span class="sep">·</span><span class="st">parsed</span>
+    </div>
+    <figure class="cover-slot">
+      <figcaption>
+        <span class="cover-k">cover image slot</span>
+        <code>/covers/{post.slug}.jpg</code>
+      </figcaption>
+    </figure>
+    <h1>❯ {post.title}</h1>
+    <p>{post.summary}</p>
+    <blockquote>
+      <p><strong>signal</strong> 这份本地副本先保留文章入口和页面结构；等办公室电脑的 Markdown 全文补齐后，这里会恢复完整正文。</p>
+    </blockquote>
+    <p>当前页面用于本地修改、UI 校验和后续内容迁移。正式站点上的完整文章仍可通过同一 URL 访问。</p>
+  </article>
+</Layout>

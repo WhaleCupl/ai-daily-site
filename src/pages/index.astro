@@ -1,0 +1,40 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { posts } from '../data';
+---
+
+<Layout>
+  <section class="hero">
+    <div class="kicker">// aidailyinsights.cn</div>
+    <div class="kicker boot">// daily ai briefing</div>
+    <h1 class="brand">AI Daily Insights<span class="cursor"></span></h1>
+    <p class="slogan">每日 AI 资讯 · 为人与 Agent 而生</p>
+    <div class="bootline"><span class="dotk"></span>system ready · {posts.length} entries indexed · last sync {posts[0].date} · booted in 0.08s</div>
+  </section>
+
+  <hr class="rule" />
+
+  <div class="cmd"><span class="pr">$</span>ls ./news <span class="flag">--sort=date</span></div>
+  <div class="listhdr"><span>date</span><span>./news/*.md &nbsp; ({posts.length} entries)</span></div>
+
+  {posts.map((post) => (
+    <a class="news-row" href={`/${post.slug}/`}>
+      <div class="news-date">{post.date}</div>
+      <div>
+        <div class="nt">{post.title}</div>
+        <div class="ns">{post.summary}</div>
+      </div>
+      <div class="stat">[parsed]</div>
+    </a>
+  ))}
+
+  <section class="agentbar">
+    <div class="agent-label">// 给 AI / Agent 的接口 — machine-readable endpoints</div>
+    <div class="agent-links">
+      <a class="chip" href="/llms.txt"><span class="dotk"></span>llms.txt</a>
+      <a class="chip" href="/feed.xml"><span class="dotk"></span>RSS</a>
+      <a class="chip" href="/index.json"><span class="dotk"></span>index.json</a>
+      <a class="chip" href="/qa/"><span class="dotk"></span>Q&A</a>
+    </div>
+  </section>
+</Layout>
