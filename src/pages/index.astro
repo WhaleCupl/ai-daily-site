@@ -28,6 +28,22 @@ const posts = await getSortedPosts();
     </a>
   ))}
 
+  <section class="usebar">
+    <div class="use-label">// 怎么用 — 三种入口，按你是谁选一个</div>
+    <div class="use-row">
+      <span class="use-k">📱 看资讯</span>
+      <span class="use-d">直接打开本站 <a href="/">www.aidailyinsights.cn</a>，或订阅 <a href="/feed.xml">RSS</a>。</span>
+    </div>
+    <div class="use-row">
+      <span class="use-k">⌨️ 终端速览</span>
+      <span class="use-d"><code>npx ai-daily-insights latest</code> — 一行命令在终端看当天资讯。</span>
+    </div>
+    <div class="use-row">
+      <span class="use-k">🤖 让 AI 调用</span>
+      <span class="use-d"><code>claude mcp add ai-daily-insights -- npx -y ai-daily-insights-mcp</code> — 装进 Claude / Cursor。</span>
+    </div>
+  </section>
+
   <section class="agentbar">
     <div class="agent-label">// 给 AI / Agent 的接口 — machine-readable endpoints</div>
     <div class="agent-links">
