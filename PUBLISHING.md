@@ -47,7 +47,13 @@ cover: /covers/2026-06-25.jpg   # 可省略，默认就是 /covers/<日期>.jpg
 1. **写正文。** 用 skill `/ai-daily-insights-writing` 或 `/ai-daily-financing-writing` 出正文，按上面格式存成 `src/content/daily/2026-06-25.md`。
 2. **放封面。** 用 skill `/ai-daily-insights-image` 出图，存为 `public/covers/2026-06-25.jpg`。没图也不报错，会显示占位框。
 3. **预览。** `npm run dev` → http://localhost:4321 检查列表 / 封面 / 正文 / 导航。
-4. **部署。** `npm run deploy`（build + 发布到 Cloudflare Pages）。
+4. **部署。** 两种方式，任选其一：
+   - **自动（推荐）**：`git push` 到 `main`，GitHub Actions（`.github/workflows/deploy.yml`）会自动 build 并发布到 Cloudflare Pages。
+   - **手动**：`npm run deploy`（本地 build + `wrangler pages deploy`）。
+
+> ⚠️ 注意：本项目的 Cloudflare Pages 是 **Direct Upload** 类型，**没有连 Git**——所以单纯 `git push` 到 GitHub *本身* 不会更新线上，必须经由上面的 Actions 或 `npm run deploy` 用 wrangler 上传 `dist`。
+>
+> 自动部署依赖两个 GitHub Secret（已配置）：`CLOUDFLARE_API_TOKEN`（权限 Cloudflare Pages\:Edit）、`CLOUDFLARE_ACCOUNT_ID`。换 token 时在仓库 Settings → Secrets → Actions 更新即可。
 
 ## 自动产出的 agent 接口（无需手动维护）
 
