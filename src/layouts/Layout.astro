@@ -21,13 +21,8 @@ const {
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title="AI Daily Insights" href="/feed.xml" />
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-    <!-- 英文/数字：Monaspace Neon（GitHub 开源等宽，终端质感）-->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5.2.5/400.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/monaspace-neon@5.2.5/700.css" />
-    <!-- 中文：Sarasa Mono SC（更纱黑体 等宽，本地自托管 · cn-font-split 切片按需加载）-->
-    <link rel="stylesheet" href="/fonts/sarasa-mono-sc/Regular/result.css" />
-    <link rel="stylesheet" href="/fonts/sarasa-mono-sc/Bold/result.css" />
+    <!-- 字体：JetBrains Mono（自托管，本地 woff2）。中文无字形，自动回退系统等宽中文 -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/jetbrains-mono/JetBrainsMono-Regular.woff2" crossorigin />
   </head>
   <body>
     <div class="term mono" id="term" data-theme="auto">

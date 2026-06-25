@@ -14,7 +14,6 @@ export function GET({ props }: { props: { post: Awaited<ReturnType<typeof getSor
     title: post.data.title,
     summary: post.data.summary,
     tags: post.data.tags,
-    cover: post.data.cover ?? `/covers/${post.id}.jpg`,
     url: `${SITE}/${post.id}/`,
     items: parseItems(post.body ?? ''),
   }, null, 2), {

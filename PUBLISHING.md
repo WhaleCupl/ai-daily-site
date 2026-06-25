@@ -1,14 +1,13 @@
 # 发布一期 AI Daily（Markdown 工作流）
 
-内容现在是 **每天一个 Markdown 文件 + 一张封面图**，跟你公众号的发布习惯一致。
-不再有手写 HTML 字符串。
+内容现在是 **每天一个 Markdown 文件**，跟你公众号的发布习惯一致。
+不再有手写 HTML 字符串，**也不再有封面图**——本站定位是给人和 AI 阅读的纯文本简报。
 
 ## 内容存放在哪
 
 | 路径 | 作用 |
 | --- | --- |
 | `src/content/daily/<日期>.md` | 当天的整期内容（frontmatter + 正文） |
-| `public/covers/<日期>.jpg` | 当天封面图，文件名 = 日期，例如 `2026-06-24.jpg` |
 
 文件名（`<日期>`）就是 slug，也是 URL：`/<日期>/`。最新一期 = 日期最大的文件，系统自动按日期倒序排，无需手动调顺序。
 
@@ -20,7 +19,6 @@ date: 2026-06-25
 title: "今天的头条标题"
 summary: "一句话 signal。"
 tags: [SpaceX, OpenAI, Anthropic]
-cover: /covers/2026-06-25.jpg   # 可省略，默认就是 /covers/<日期>.jpg
 ---
 
 ## ❯ 第一条新闻的标题
@@ -40,14 +38,13 @@ cover: /covers/2026-06-25.jpg   # 可省略，默认就是 /covers/<日期>.jpg
 - 每条新闻用 `## ❯ 标题` 开头 —— 这些标题会**自动生成**文章顶部的「今日导航(tree)」。
 - 段落开头的 `` `[电报开局]` `` 这种小标签用行内代码（反引号）。
 - 每条结尾的判断用 `> **signal:** ...` 引用块。
-- 封面图、meta 行、导航都由系统**自动渲染**，正文里不要再写。
+- meta 行、导航都由系统**自动渲染**，正文里不要再写。
 
 ## 发布步骤
 
 1. **写正文。** 用 skill `/ai-daily-insights-writing` 或 `/ai-daily-financing-writing` 出正文，按上面格式存成 `src/content/daily/2026-06-25.md`。
-2. **放封面。** 用 skill `/ai-daily-insights-image` 出图，存为 `public/covers/2026-06-25.jpg`。没图也不报错，会显示占位框。
-3. **预览。** `npm run dev` → http://localhost:4321 检查列表 / 封面 / 正文 / 导航。
-4. **部署。** 两种方式，任选其一：
+2. **预览。** `npm run dev` → http://localhost:4321 检查列表 / 正文 / 导航。
+3. **部署。** 两种方式，任选其一：
    - **自动（推荐）**：`git push` 到 `main`，GitHub Actions（`.github/workflows/deploy.yml`）会自动 build 并发布到 Cloudflare Pages。
    - **手动**：`npm run deploy`（本地 build + `wrangler pages deploy`）。
 
