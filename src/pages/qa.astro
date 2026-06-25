@@ -15,6 +15,52 @@ import Layout from '../layouts/Layout.astro';
     <p><strong>AI Daily Insights</strong> 是一个面向人和 AI Agent 的每日 AI 资讯站。它不只把新闻写成人能快速扫读的文章，也把同一批内容整理成机器可发现、可引用、可检索的入口。</p>
     <p>核心目标很简单：人打开网页时，看到判断、脉络和信号；Agent 调用时，能拿到稳定 URL、结构化索引和明确的引用边界。</p>
 
+    <h2>❯ 三种接入方式，先选一条</h2>
+    <table>
+      <thead>
+        <tr><th>路线</th><th>适合谁</th><th>怎么开始</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>MCP</strong>（推荐）</td><td>Claude / Cursor 等 AI 助手</td><td>一条命令注册，让 AI 替你读（见下文）</td></tr>
+        <tr><td><strong>CLI</strong></td><td>习惯命令行</td><td><code>npx ai-daily-insights latest</code></td></tr>
+        <tr><td><strong>JSON / RSS</strong></td><td>开发者 / 自建 Agent</td><td><code>GET /index.json</code>、<code>/feed.xml</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2>❯ 接入之后，可以怎么用？</h2>
+    <p>接上 MCP 之后，你<strong>不用记任何命令</strong>，直接用大白话跟 AI 助手说话就行。它会自己判断该调哪个工具、去取哪天的数据。常见两类用法：</p>
+
+    <div class="ask-block">
+      <div class="ask-k">📰 日常速览</div>
+      <ul class="ask-list">
+        <li>看看今天的 AI Daily</li>
+        <li>最近三天 AI 圈有什么大新闻？</li>
+        <li>把这周的 AI Daily 总结成 5 条划重点</li>
+      </ul>
+    </div>
+
+    <div class="ask-block">
+      <div class="ask-k">🔍 公司 / 主题定向</div>
+      <ul class="ask-list">
+        <li>搜一下最近关于 Anthropic 的新闻</li>
+        <li>OpenAI 这周有什么发布？讲讲细节</li>
+        <li>帮我盯着英伟达和 HBM 内存相关的动态</li>
+      </ul>
+    </div>
+
+    <p>这些大白话，背后由 AI 自动映射到对应工具，你无需关心：</p>
+    <table>
+      <thead>
+        <tr><th>你想做什么</th><th>这样问它</th><th>背后调用</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>看最近几期</td><td>「最近有什么 AI 新闻」</td><td><code>list_latest</code></td></tr>
+        <tr><td>看今天 / 最新一期</td><td>「看看今天的 AI Daily」</td><td><code>get_latest</code></td></tr>
+        <tr><td>看某一天全部内容</td><td>「打开 6 月 24 日那期」</td><td><code>get_article</code></td></tr>
+        <tr><td>定向筛选公司 / 主题</td><td>「搜一下关于 Anthropic 的新闻」</td><td><code>search</code></td></tr>
+      </tbody>
+    </table>
+
     <h2>❯ 为什么叫“为人与 Agent 而生”？</h2>
     <p>传统媒体页面默认给人读，API 默认给程序读。这个站点希望中间层更薄：同一篇内容同时有 HTML、RSS、JSON index 和 llms.txt，方便浏览器、订阅器、搜索引擎和 Agent 从不同入口进入。</p>
 
@@ -54,7 +100,7 @@ curl -s https://www.aidailyinsights.cn/feed.xml      # RSS 订阅 / 轮询</code
     }
   }
 }`}</code></pre>
-    <p>提供三个工具：<code>list_latest</code>（最近 N 期）、<code>get_article</code>（按日期取单期结构化正文）、<code>search</code>（跨期关键词检索）。源码与文档见 <a href="https://www.npmjs.com/package/ai-daily-insights-mcp">npm</a> / <a href="https://github.com/WhaleCupl/ai-daily-insights-mcp">GitHub</a>。</p>
+    <p>提供四个工具：<code>list_latest</code>（最近 N 期）、<code>get_latest</code>（最新一期）、<code>get_article</code>（按日期取单期结构化正文）、<code>search</code>（跨期关键词检索）。源码与文档见 <a href="https://www.npmjs.com/package/ai-daily-insights-mcp">npm</a> / <a href="https://github.com/WhaleCupl/ai-daily-insights-mcp">GitHub</a>。</p>
 
     <h2>❯ 在终端里读（CLI）</h2>
     <p>如果你更习惯命令行，用 <code>ai-daily-insights</code> 这个 CLI 直接在终端速览，无需打开浏览器：</p>
