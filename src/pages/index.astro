@@ -1,14 +1,25 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getSortedPosts } from '../posts';
+import { getSortedPosts, SITE } from '../posts';
 
 const allPosts = await getSortedPosts();
 const RECENT = 30;
 const posts = allPosts.slice(0, RECENT);
 const hasMore = allPosts.length > RECENT;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'AI Daily Insights',
+  alternateName: 'AI 日报',
+  url: SITE,
+  description: 'AI Daily Insights — 每日 AI 资讯，为人与 Agent 而生',
+  inLanguage: 'zh-CN',
+  publisher: { '@type': 'Organization', name: 'AI Daily Insights', url: SITE },
+};
 ---
 
-<Layout>
+<Layout jsonLd={jsonLd}>
   <section class="hero">
     <h1 class="brand">AI Daily Insights<span class="cursor"></span></h1>
     <p class="slogan">每日 AI 资讯 · 为人与 Agent 而生</p>

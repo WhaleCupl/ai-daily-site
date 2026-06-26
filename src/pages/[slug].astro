@@ -1,7 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { getSortedPosts } from '../posts';
+import { getSortedPosts, SITE } from '../posts';
 
 export async function getStaticPaths() {
   const posts = await getSortedPosts();
@@ -12,12 +12,33 @@ const { post } = Astro.props;
 const { date, title, summary, tags } = post.data;
 const { Content, headings } = await render(post);
 
+const articleUrl = `${SITE}/${post.id}/`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'NewsArticle',
+  headline: title,
+  description: summary,
+  datePublished: date,
+  dateModified: date,
+  inLanguage: 'zh-CN',
+  url: articleUrl,
+  mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
+  keywords: tags.join(', '),
+  author: { '@type': 'Organization', name: 'AI Daily Insights' },
+  publisher: { '@type': 'Organization', name: 'AI Daily Insights', url: SITE },
+};
 const navItems = headings
   .filter((h) => h.depth === 2)
   .map((h) => ({ id: h.slug, title: h.text.replace(/^❯\s*/, '').trim() }));
 ---
 
-<Layout title={`${title} · AI Daily Insights`} description={summary}>
+<Layout
+  title={`${title} · AI Daily Insights`}
+  description={summary}
+  type="article"
+  publishedTime={date}
+  jsonLd={jsonLd}
+>
   <a class="backnav" href="/">
     <span class="back-arrow">←</span>
     <span class="back-label">返回 AI Daily 首页</span>
