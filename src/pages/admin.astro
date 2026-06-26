@@ -11,7 +11,16 @@ import Layout from '../layouts/Layout.astro';
   <div class="cmd"><span class="pr">$</span>upload ./today.md <span class="flag">--publish</span></div>
 
   <article class="md">
-    <h1>❯ 发布新一期</h1>
+    <h1>❯ 发布后台</h1>
+
+    <h2>❯ 数据统计</h2>
+    <p class="admin-hint">网页 = 人打开页面的次数；接口/MCP = <code>/index.json</code>、<code>/&lt;日期&gt;.json</code>、<code>/feed.xml</code> 这些被 MCP / CLI / RSS 阅读器调用的次数。是原始命中数，不做去重，仅供看趋势。</p>
+    <div id="stats-totals" class="admin-stats-grid">
+      <div class="admin-hint">加载中…</div>
+    </div>
+    <div id="stats-daily" class="admin-list"></div>
+
+    <h2>❯ 发布新一期</h2>
     <p>
       选择当天的 <code>YYYY-MM-DD.md</code> 文件，点击发布。文件名即上线日期，frontmatter
       需包含 <code>date</code> / <code>title</code> / <code>summary</code> / <code>tags</code>。
@@ -54,7 +63,40 @@ import Layout from '../layouts/Layout.astro';
     const editorSaveBtn = document.getElementById('editor-save') as HTMLButtonElement;
     const editorCancelBtn = document.getElementById('editor-cancel') as HTMLButtonElement;
 
+    const statsTotalsEl = document.getElementById('stats-totals') as HTMLDivElement;
+    const statsDailyEl = document.getElementById('stats-daily') as HTMLDivElement;
+
     let editingDate: string | null = null;
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+
+        statsTotalsEl.innerHTML = `
+          <div class="admin-stat-card"><div class="admin-stat-num">${data.totals.page || 0}</div><div class="admin-stat-label">网页总访问</div></div>
+          <div class="admin-stat-card"><div class="admin-stat-num">${data.totals.api || 0}</div><div class="admin-stat-label">接口 / MCP 总调用</div></div>
+        `;
+
+        if (!data.daily || data.daily.length === 0) {
+          statsDailyEl.innerHTML = '<p class="admin-hint">还没有按天的数据</p>';
+          return;
+        }
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead><tr><th>日期</th><th>网页访问</th><th>接口 / MCP 调用</th></tr></thead>
+          <tbody>
+            ${data.daily
+              .map((d: any) => `<tr><td>${d.date}</td><td>${d.page || 0}</td><td>${d.api || 0}</td></tr>`)
+              .join('')}
+          </tbody>`;
+        statsDailyEl.innerHTML = '';
+        statsDailyEl.appendChild(table);
+      } catch (err) {
+        statsTotalsEl.innerHTML = `<p class="admin-hint">统计加载失败：${err instanceof Error ? err.message : String(err)}</p>`;
+      }
+    }
 
     function setStatus(el: HTMLDivElement, ok: boolean, text: string) {
       el.textContent = `${ok ? '✅' : '❌'} ${text}`;
@@ -204,5 +246,6 @@ import Layout from '../layouts/Layout.astro';
     });
 
     loadList();
+    loadStats();
   </script>
 </Layout>

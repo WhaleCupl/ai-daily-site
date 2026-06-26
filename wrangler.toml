@@ -4,3 +4,7 @@ pages_build_output_dir = "dist"
 
 [vars]
 NODE_VERSION = "22.12.0"
+
+[[kv_namespaces]]
+binding = "ANALYTICS"
+id = "955aaa3a26454a61aee3d5eb63f62cf9"

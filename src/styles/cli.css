@@ -87,3 +87,7 @@
 #editor-save:hover{background:var(--primary-2)}
 #editor-save:disabled{opacity:.5;cursor:default}
 .admin-btn-secondary{color:var(--text);background:var(--row-hover);border:1px dashed var(--hair-strong)!important}
+.admin-stats-grid{gap:14px;margin:16px 0 22px;display:flex;flex-wrap:wrap}
+.admin-stat-card{flex:1;min-width:160px;background:var(--row-hover);border:1px dashed var(--hair-strong);border-radius:4px;padding:16px 18px}
+.admin-stat-num{color:var(--primary);font-size:30px;font-weight:800;line-height:1.1}
+.admin-stat-label{color:var(--dim);margin-top:4px;font-size:12px;letter-spacing:.3px}
