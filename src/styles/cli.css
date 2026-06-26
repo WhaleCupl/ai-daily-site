@@ -92,3 +92,8 @@
 .admin-stat-card{flex:1;min-width:160px;background:var(--row-hover);border:none;border-top:1px dashed var(--hair-strong);border-bottom:1px dashed var(--hair-strong);padding:16px 18px}
 .admin-stat-num{color:var(--primary);font-size:30px;font-weight:800;line-height:1.1}
 .admin-stat-label{color:var(--dim);margin-top:4px;font-size:12px;letter-spacing:.3px}
+.admin-daily-grid{gap:14px;margin:16px 0 22px;display:grid;grid-template-columns:1fr 1fr 1fr}
+.admin-daily-col{background:var(--row-hover);border-top:1px dashed var(--hair-strong);border-bottom:1px dashed var(--hair-strong);padding:14px 18px}
+.admin-daily-head{color:var(--primary);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px dashed var(--hair);margin-bottom:2px;padding-bottom:9px;font-size:12px;font-weight:700;white-space:nowrap}
+.admin-daily-val{font-variant-numeric:tabular-nums;padding:7px 0;font-size:14px;line-height:1.6}
+.admin-daily-val+.admin-daily-val{border-top:1px solid var(--hair)}

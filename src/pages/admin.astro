@@ -83,16 +83,15 @@ import Layout from '../layouts/Layout.astro';
           statsDailyEl.innerHTML = '<p class="admin-hint">还没有按天的数据</p>';
           return;
         }
-        const table = document.createElement('table');
-        table.innerHTML = `
-          <thead><tr><th>日期</th><th>网页访问</th><th>接口 / MCP 调用</th></tr></thead>
-          <tbody>
-            ${data.daily
-              .map((d: any) => `<tr><td>${d.date}</td><td>${d.page || 0}</td><td>${d.api || 0}</td></tr>`)
-              .join('')}
-          </tbody>`;
-        statsDailyEl.innerHTML = '';
-        statsDailyEl.appendChild(table);
+        const col = (head: string, vals: string[]) =>
+          `<div class="admin-daily-col"><div class="admin-daily-head">${head}</div>${vals
+            .map((v) => `<div class="admin-daily-val">${v}</div>`)
+            .join('')}</div>`;
+        statsDailyEl.innerHTML = `<div class="admin-daily-grid">
+          ${col('日期', data.daily.map((d: any) => d.date))}
+          ${col('网页访问', data.daily.map((d: any) => String(d.page || 0)))}
+          ${col('接口 / MCP 调用', data.daily.map((d: any) => String(d.api || 0)))}
+        </div>`;
       } catch (err) {
         statsTotalsEl.innerHTML = `<p class="admin-hint">统计加载失败：${err instanceof Error ? err.message : String(err)}</p>`;
       }
