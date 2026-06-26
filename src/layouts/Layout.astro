@@ -12,6 +12,8 @@ interface Props {
   publishedTime?: string;
   /** Schema.org JSON-LD object injected into <head>. */
   jsonLd?: Record<string, unknown>;
+  /** Set true to keep this page out of search engines (e.g. /admin). */
+  noindex?: boolean;
 }
 
 const {
@@ -21,6 +23,7 @@ const {
   image,
   publishedTime,
   jsonLd,
+  noindex = false,
 } = Astro.props;
 
 const SITE = 'https://www.aidailyinsights.cn';
@@ -36,6 +39,7 @@ const imageUrl = image ? new URL(image, SITE).href : undefined;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title="AI Daily Insights" href="/feed.xml" />

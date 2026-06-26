@@ -1,0 +1,65 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="发布后台 · AI Daily Insights" description="内容发布后台" noindex>
+  <a class="backnav" href="/">
+    <span class="back-arrow">←</span>
+    <span class="back-label">返回 AI Daily 首页</span>
+    <span class="back-cmd">cd ~/news</span>
+  </a>
+  <div class="cmd"><span class="pr">$</span>upload ./today.md <span class="flag">--publish</span></div>
+
+  <article class="md">
+    <h1>❯ 发布新一期</h1>
+    <p>
+      选择当天的 <code>YYYY-MM-DD.md</code> 文件，点击发布。文件名即上线日期，frontmatter
+      需包含 <code>date</code> / <code>title</code> / <code>summary</code> / <code>tags</code>。
+    </p>
+    <p>发布后会自动提交到仓库并触发部署，约 1 分钟后线上生效，整个过程不需要再碰终端。</p>
+
+    <form id="publish-form">
+      <input type="file" id="file-input" name="file" accept=".md" required />
+      <button type="submit" id="submit-btn">发布</button>
+    </form>
+    <div id="status" class="admin-status"></div>
+  </article>
+
+  <script>
+    const form = document.getElementById('publish-form') as HTMLFormElement;
+    const status = document.getElementById('status') as HTMLDivElement;
+    const btn = document.getElementById('submit-btn') as HTMLButtonElement;
+    const fileInput = document.getElementById('file-input') as HTMLInputElement;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = fileInput.files?.[0];
+      if (!file) return;
+
+      btn.disabled = true;
+      status.textContent = '发布中…';
+      status.className = 'admin-status';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/publish', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.ok) {
+          status.textContent = `✅ ${data.message}`;
+          status.classList.add('ok');
+          form.reset();
+        } else {
+          status.textContent = `❌ ${data.error}`;
+          status.classList.add('err');
+        }
+      } catch (err) {
+        status.textContent = `❌ 网络错误：${err instanceof Error ? err.message : String(err)}`;
+        status.classList.add('err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</Layout>
