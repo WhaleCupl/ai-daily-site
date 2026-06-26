@@ -22,42 +22,52 @@ export function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// 后台明细展示的天数，也是读取时回看的窗口。
+const WINDOW_DAYS = 30;
+// 每日计数器的存活时间：超过这个天数的历史明细自动从 KV 过期，避免 key 无限堆积。
+// 总量计数器（pv:total:*）不设 TTL，永久保留，所以总访问量始终准确。
+const DAILY_TTL_SECONDS = 400 * 24 * 60 * 60;
+
 export async function recordHit(kv, category) {
   const date = todayKey();
-  await Promise.all([bump(kv, `pv:${date}:${category}`), bump(kv, 'pv:total:' + category)]);
+  await Promise.all([
+    bump(kv, `pv:${date}:${category}`, { expirationTtl: DAILY_TTL_SECONDS }),
+    bump(kv, 'pv:total:' + category),
+  ]);
 }
 
-async function bump(kv, key) {
+async function bump(kv, key, options) {
   const current = parseInt((await kv.get(key)) || '0', 10);
-  await kv.put(key, String(current + 1));
+  await kv.put(key, String(current + 1), options);
 }
 
-/** 读取全部统计，返回 { totals: {page,api}, daily: [{date,page,api}, ...] }（按日期降序，最多 30 天）。 */
+/** 返回最近 WINDOW_DAYS 天的日期字符串（YYYY-MM-DD），今天在前。 */
+function recentDates() {
+  const dates = [];
+  const base = Date.parse(todayKey() + 'T00:00:00Z');
+  for (let i = 0; i < WINDOW_DAYS; i++) {
+    dates.push(new Date(base - i * 86400000).toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+/**
+ * 读取统计，返回 { totals: {page,api}, daily: [{date,page,api}, ...] }（按日期降序）。
+ * 总量直接读 2 个固定 key；明细只按需读最近 WINDOW_DAYS 天，读取成本恒定，与历史长度无关。
+ */
 export async function readStats(kv) {
-  const list = await kv.list({ prefix: 'pv:' });
-  const entries = await Promise.all(
-    list.keys.map(async (k) => ({ key: k.name, value: parseInt((await kv.get(k.name)) || '0', 10) }))
+  const num = async (key) => parseInt((await kv.get(key)) || '0', 10);
+
+  const [page, api] = await Promise.all([num('pv:total:page'), num('pv:total:api')]);
+  const totals = { page, api };
+
+  const daily = await Promise.all(
+    recentDates().map(async (date) => {
+      const [page, api] = await Promise.all([num(`pv:${date}:page`), num(`pv:${date}:api`)]);
+      return { date, page, api };
+    })
   );
 
-  const totals = { page: 0, api: 0 };
-  const byDate = new Map();
-
-  for (const { key, value } of entries) {
-    const parts = key.split(':'); // pv:<date|total>:<category>
-    const [, scope, category] = parts;
-    if (category !== 'page' && category !== 'api') continue;
-    if (scope === 'total') {
-      totals[category] = value;
-    } else {
-      const row = byDate.get(scope) || { date: scope, page: 0, api: 0 };
-      row[category] = value;
-      byDate.set(scope, row);
-    }
-  }
-
-  const daily = Array.from(byDate.values())
-    .sort((a, b) => (a.date < b.date ? 1 : -1))
-    .slice(0, 30);
-
-  return { totals, daily };
+  // 丢掉两边都为 0 的空白天，避免新站点一上来就显示一堆 0。
+  return { totals, daily: daily.filter((d) => d.page > 0 || d.api > 0) };
 }
