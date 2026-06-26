@@ -23,20 +23,163 @@ import Layout from '../layouts/Layout.astro';
       <button type="submit" id="submit-btn">发布</button>
     </form>
     <div id="status" class="admin-status"></div>
+
+    <h2>❯ 已发布文章</h2>
+    <div id="article-list" class="admin-list">
+      <p class="admin-hint">加载中…</p>
+    </div>
+
+    <div id="editor-wrap" class="admin-editor" hidden>
+      <h2><span id="editor-title">❯ 编辑</span></h2>
+      <textarea id="editor-textarea" rows="22"></textarea>
+      <div class="admin-editor-actions">
+        <button type="button" id="editor-save">保存修改</button>
+        <button type="button" id="editor-cancel" class="admin-btn-secondary">取消</button>
+      </div>
+      <div id="editor-status" class="admin-status"></div>
+    </div>
   </article>
 
   <script>
-    const form = document.getElementById('publish-form') as HTMLFormElement;
+    const publishForm = document.getElementById('publish-form') as HTMLFormElement;
     const status = document.getElementById('status') as HTMLDivElement;
-    const btn = document.getElementById('submit-btn') as HTMLButtonElement;
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
 
-    form.addEventListener('submit', async (e) => {
+    const listEl = document.getElementById('article-list') as HTMLDivElement;
+    const editorWrap = document.getElementById('editor-wrap') as HTMLDivElement;
+    const editorTitle = document.getElementById('editor-title') as HTMLSpanElement;
+    const editorTextarea = document.getElementById('editor-textarea') as HTMLTextAreaElement;
+    const editorStatus = document.getElementById('editor-status') as HTMLDivElement;
+    const editorSaveBtn = document.getElementById('editor-save') as HTMLButtonElement;
+    const editorCancelBtn = document.getElementById('editor-cancel') as HTMLButtonElement;
+
+    let editingDate: string | null = null;
+
+    function setStatus(el: HTMLDivElement, ok: boolean, text: string) {
+      el.textContent = `${ok ? '✅' : '❌'} ${text}`;
+      el.className = `admin-status ${ok ? 'ok' : 'err'}`;
+    }
+
+    async function loadList() {
+      listEl.innerHTML = '<p class="admin-hint">加载中…</p>';
+      try {
+        const res = await fetch('/index.json');
+        const data = await res.json();
+        const posts = data.posts || [];
+        if (posts.length === 0) {
+          listEl.innerHTML = '<p class="admin-hint">暂无文章</p>';
+          return;
+        }
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead><tr><th>日期</th><th>标题</th><th>标签</th><th></th></tr></thead>
+          <tbody>
+            ${posts
+              .map(
+                (p: any) => `
+              <tr data-date="${p.date}">
+                <td>${p.date}</td>
+                <td>${escapeHtml(p.title)}</td>
+                <td>${(p.tags || []).join(', ')}</td>
+                <td class="admin-row-actions">
+                  <button type="button" class="admin-btn-link" data-action="edit" data-date="${p.date}">编辑</button>
+                  <button type="button" class="admin-btn-link admin-btn-danger" data-action="delete" data-date="${p.date}">删除</button>
+                </td>
+              </tr>`
+              )
+              .join('')}
+          </tbody>`;
+        listEl.innerHTML = '';
+        listEl.appendChild(table);
+
+        table.querySelectorAll('[data-action="edit"]').forEach((btn) => {
+          btn.addEventListener('click', () => openEditor((btn as HTMLElement).dataset.date as string));
+        });
+        table.querySelectorAll('[data-action="delete"]').forEach((btn) => {
+          btn.addEventListener('click', () => deleteArticle((btn as HTMLElement).dataset.date as string));
+        });
+      } catch (err) {
+        listEl.innerHTML = `<p class="admin-hint">列表加载失败：${err instanceof Error ? err.message : String(err)}</p>`;
+      }
+    }
+
+    function escapeHtml(s: string) {
+      return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+    }
+
+    async function openEditor(date: string) {
+      editingDate = date;
+      editorTitle.textContent = `❯ 编辑 ${date}`;
+      editorStatus.textContent = '';
+      editorStatus.className = 'admin-status';
+      editorWrap.hidden = false;
+      editorTextarea.value = '加载中…';
+      editorWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      try {
+        const res = await fetch(`/api/article?date=${date}`);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        editorTextarea.value = data.content;
+      } catch (err) {
+        editorTextarea.value = '';
+        setStatus(editorStatus, false, `加载失败：${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+
+    editorCancelBtn.addEventListener('click', () => {
+      editorWrap.hidden = true;
+      editingDate = null;
+    });
+
+    editorSaveBtn.addEventListener('click', async () => {
+      if (!editingDate) return;
+      editorSaveBtn.disabled = true;
+      setStatus(editorStatus, true, '保存中…');
+      try {
+        const blob = new Blob([editorTextarea.value], { type: 'text/markdown' });
+        const file = new File([blob], `${editingDate}.md`, { type: 'text/markdown' });
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/publish', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        setStatus(editorStatus, true, data.message);
+        loadList();
+      } catch (err) {
+        setStatus(editorStatus, false, err instanceof Error ? err.message : String(err));
+      } finally {
+        editorSaveBtn.disabled = false;
+      }
+    });
+
+    async function deleteArticle(date: string) {
+      if (!confirm(`确定删除 ${date} 这篇文章吗？此操作不可恢复。`)) return;
+      try {
+        const res = await fetch('/api/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        setStatus(status, true, data.message);
+        if (editingDate === date) {
+          editorWrap.hidden = true;
+          editingDate = null;
+        }
+        loadList();
+      } catch (err) {
+        setStatus(status, false, err instanceof Error ? err.message : String(err));
+      }
+    }
+
+    publishForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const file = fileInput.files?.[0];
       if (!file) return;
 
-      btn.disabled = true;
+      submitBtn.disabled = true;
       status.textContent = '发布中…';
       status.className = 'admin-status';
 
@@ -47,19 +190,19 @@ import Layout from '../layouts/Layout.astro';
         const res = await fetch('/api/publish', { method: 'POST', body: formData });
         const data = await res.json();
         if (data.ok) {
-          status.textContent = `✅ ${data.message}`;
-          status.classList.add('ok');
-          form.reset();
+          setStatus(status, true, data.message);
+          publishForm.reset();
+          loadList();
         } else {
-          status.textContent = `❌ ${data.error}`;
-          status.classList.add('err');
+          setStatus(status, false, data.error);
         }
       } catch (err) {
-        status.textContent = `❌ 网络错误：${err instanceof Error ? err.message : String(err)}`;
-        status.classList.add('err');
+        setStatus(status, false, `网络错误：${err instanceof Error ? err.message : String(err)}`);
       } finally {
-        btn.disabled = false;
+        submitBtn.disabled = false;
       }
     });
+
+    loadList();
   </script>
 </Layout>

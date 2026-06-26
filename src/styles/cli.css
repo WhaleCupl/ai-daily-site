@@ -70,3 +70,20 @@
 .admin-status{min-height:1.4em;margin-top:10px;font-size:14px}
 .admin-status.ok{color:var(--green)}
 .admin-status.err{color:var(--red)}
+.admin-hint{color:var(--dim);font-size:14px}
+.admin-list table{width:100%;border-collapse:collapse;margin:14px 0 24px;font-size:14px}
+.admin-list th,.admin-list td{border:1px dashed var(--hair-strong);padding:9px 12px;text-align:left;vertical-align:top;line-height:1.6}
+.admin-list th{color:var(--primary);background:var(--row-hover);text-transform:uppercase;letter-spacing:.5px;font-size:12px;font-weight:700;white-space:nowrap}
+.admin-list td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+.admin-row-actions{white-space:nowrap}
+.admin-btn-link{color:var(--primary);background:none;border:none;font:inherit;font-weight:700;cursor:pointer;padding:0;margin-right:14px}
+.admin-btn-link:hover{text-decoration:underline}
+.admin-btn-link.admin-btn-danger{color:var(--red)}
+.admin-editor{border-top:1px dashed var(--hair-strong);margin-top:10px;padding-top:18px}
+.admin-editor textarea{width:100%;color:var(--text);background:var(--row-hover);border:1px dashed var(--hair-strong);border-radius:3px;padding:12px;font:13px/1.7 inherit;resize:vertical}
+.admin-editor-actions{gap:12px;margin-top:12px;display:flex}
+.admin-editor-actions button{font:inherit;font-weight:700;border:none;border-radius:3px;padding:9px 22px;cursor:pointer}
+#editor-save{color:#fff;background:var(--primary)}
+#editor-save:hover{background:var(--primary-2)}
+#editor-save:disabled{opacity:.5;cursor:default}
+.admin-btn-secondary{color:var(--text);background:var(--row-hover);border:1px dashed var(--hair-strong)!important}
