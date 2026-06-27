@@ -4,6 +4,7 @@
 // 需要在 Cloudflare Pages 项目的环境变量/secrets 里配置 GITHUB_TOKEN
 // （fine-grained PAT，只需 Contents: Read & write，scope 到本仓库）。
 import { githubConfig, articlePath, putFile, jsonResponse, HttpError } from '../_lib/github.js';
+import { isCliMarkdown, convertCliMarkdown } from '../_lib/cli-markdown.js';
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -25,7 +26,18 @@ export async function onRequestPost(context) {
     return jsonResponse({ ok: false, error: `文件名必须是 YYYY-MM-DD.md 格式，收到的是「${filename}」` }, 400);
   }
 
-  const content = await file.text();
+  const raw = await file.text();
+  // 「微信/CLI 终端风」文件没有 frontmatter，先自动转换成网站存储格式。
+  let content = raw;
+  if (!raw.trim().startsWith('---') && isCliMarkdown(raw)) {
+    try {
+      const date = filename.replace(/\.md$/, '');
+      content = convertCliMarkdown(raw, date);
+    } catch (err) {
+      return jsonResponse({ ok: false, error: `自动转换失败：${err.message}` }, 400);
+    }
+  }
+
   const trimmed = content.trim();
   if (!trimmed.startsWith('---')) {
     return jsonResponse({ ok: false, error: '文件缺少 frontmatter（应以 --- 开头）' }, 400);
