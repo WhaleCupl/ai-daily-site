@@ -21,19 +21,22 @@ export async function onRequestPost(context) {
     return jsonResponse({ ok: false, error: '未收到文件' }, 400);
   }
 
-  // 文件名只需「含有」一个 YYYY-MM-DD 日期即可（如 AI-Daily-Insights-2026-06-27.md），
-  // 自动提取后规范成 <日期>.md 落库——日期就是文章 slug 和上线日期。
   if (!/\.md$/i.test(file.name)) {
     return jsonResponse({ ok: false, error: `只接受 .md 文件，收到的是「${file.name}」` }, 400);
   }
-  const dateMatch = file.name.match(/(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])/);
-  if (!dateMatch) {
-    return jsonResponse({ ok: false, error: `文件名里必须含有日期（YYYY-MM-DD），收到的是「${file.name}」` }, 400);
-  }
-  const date = dateMatch[0];
-  const filename = `${date}.md`;
 
   const raw = await file.text();
+  const DATE_RE = /(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])/;
+
+  // 日期决定文章 slug 与上线日期，按优先级取，文件名叫什么都不影响：
+  //   1) 内容 frontmatter 里的 date:  2) 文件名里的日期  3) 服务器当天
+  const fmDate = raw.trim().startsWith('---')
+    ? (raw.match(/^date:\s*["']?(\d{4}-\d{2}-\d{2})/m) || [])[1]
+    : null;
+  const nameDate = (file.name.match(DATE_RE) || [])[0];
+  const date = fmDate || nameDate || new Date().toISOString().slice(0, 10);
+  const filename = `${date}.md`;
+
   // 「微信/CLI 终端风」文件没有 frontmatter，先自动转换成网站存储格式。
   let content = raw;
   if (!raw.trim().startsWith('---') && isCliMarkdown(raw)) {
