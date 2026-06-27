@@ -21,17 +21,23 @@ export async function onRequestPost(context) {
     return jsonResponse({ ok: false, error: '未收到文件' }, 400);
   }
 
-  const filename = file.name;
-  if (!/^\d{4}-\d{2}-\d{2}\.md$/.test(filename)) {
-    return jsonResponse({ ok: false, error: `文件名必须是 YYYY-MM-DD.md 格式，收到的是「${filename}」` }, 400);
+  // 文件名只需「含有」一个 YYYY-MM-DD 日期即可（如 AI-Daily-Insights-2026-06-27.md），
+  // 自动提取后规范成 <日期>.md 落库——日期就是文章 slug 和上线日期。
+  if (!/\.md$/i.test(file.name)) {
+    return jsonResponse({ ok: false, error: `只接受 .md 文件，收到的是「${file.name}」` }, 400);
   }
+  const dateMatch = file.name.match(/(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])/);
+  if (!dateMatch) {
+    return jsonResponse({ ok: false, error: `文件名里必须含有日期（YYYY-MM-DD），收到的是「${file.name}」` }, 400);
+  }
+  const date = dateMatch[0];
+  const filename = `${date}.md`;
 
   const raw = await file.text();
   // 「微信/CLI 终端风」文件没有 frontmatter，先自动转换成网站存储格式。
   let content = raw;
   if (!raw.trim().startsWith('---') && isCliMarkdown(raw)) {
     try {
-      const date = filename.replace(/\.md$/, '');
       content = convertCliMarkdown(raw, date);
     } catch (err) {
       return jsonResponse({ ok: false, error: `自动转换失败：${err.message}` }, 400);

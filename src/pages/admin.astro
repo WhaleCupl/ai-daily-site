@@ -22,7 +22,9 @@ import Layout from '../layouts/Layout.astro';
 
     <h2>❯ 发布新一期</h2>
     <p>
-      选择当天的 <code>YYYY-MM-DD.md</code> 文件，点击发布。文件名即上线日期。两种格式都支持：带
+      选择当天的 <code>.md</code> 文件，点击发布。文件名里含有日期即可（如
+      <code>AI-Daily-Insights-2026-06-27.md</code>），系统会自动提取 <code>2026-06-27</code> 作为上线日期与
+      slug。两种格式都支持：带
       <code>date</code> / <code>title</code> / <code>summary</code> / <code>tags</code> frontmatter 的标准文件，
       或微信/CLI 终端风文件（无 frontmatter，后台会自动剥掉 <code>tree</code>/<code>cat</code> 外壳、把 <code>#标签</code>
       转成 tags、取头条标题与 signal 生成 frontmatter）。
