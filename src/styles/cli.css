@@ -93,7 +93,8 @@
 .admin-stat-num{color:var(--primary);font-size:30px;font-weight:800;line-height:1.1}
 .admin-stat-label{color:var(--dim);margin-top:4px;font-size:12px;letter-spacing:.3px}
 .admin-daily-grid{gap:14px;margin:16px 0 22px;display:grid;grid-template-columns:1fr 1fr 1fr}
-.admin-daily-col{background:var(--row-hover);border-top:1px dashed var(--hair-strong);border-bottom:1px dashed var(--hair-strong);padding:14px 18px}
-.admin-daily-head{color:var(--dim);letter-spacing:.3px;margin-bottom:10px;font-size:12px;white-space:nowrap}
-.admin-daily-val{color:var(--primary);font-variant-numeric:tabular-nums;padding:7px 0;font-size:26px;font-weight:800;line-height:1.2}
+.admin-daily-col{background:var(--row-hover);border-top:1px dashed var(--hair-strong);border-bottom:1px dashed var(--hair-strong);padding:12px 16px}
+.admin-daily-head{color:var(--dim);letter-spacing:.3px;margin-bottom:6px;font-size:12px;white-space:nowrap}
+.admin-daily-val{color:var(--primary);font-variant-numeric:tabular-nums;height:34px;display:flex;align-items:center;font-size:15px;font-weight:700;line-height:1}
 .admin-daily-val+.admin-daily-val{border-top:1px solid var(--hair)}
+.admin-daily-val.is-empty{color:var(--dim);font-weight:600}

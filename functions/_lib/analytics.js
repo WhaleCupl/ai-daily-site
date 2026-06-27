@@ -22,8 +22,8 @@ export function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
-// 后台明细展示的天数，也是读取时回看的窗口。
-const WINDOW_DAYS = 30;
+// 后台明细展示的天数，也是读取时回看的窗口。固定 7 天，保证按天面板布局恒定。
+const WINDOW_DAYS = 7;
 // 每日计数器的存活时间：超过这个天数的历史明细自动从 KV 过期，避免 key 无限堆积。
 // 总量计数器（pv:total:*）不设 TTL，永久保留，所以总访问量始终准确。
 const DAILY_TTL_SECONDS = 400 * 24 * 60 * 60;
@@ -68,6 +68,6 @@ export async function readStats(kv) {
     })
   );
 
-  // 丢掉两边都为 0 的空白天，避免新站点一上来就显示一堆 0。
-  return { totals, daily: daily.filter((d) => d.page > 0 || d.api > 0) };
+  // 固定返回最近 7 天（含全 0 的空白天）作为占位，让后台按天面板布局始终稳定。
+  return { totals, daily };
 }
