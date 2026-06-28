@@ -133,7 +133,7 @@ import Layout from '../layouts/Layout.astro';
               .map(
                 (p: any) => `
               <tr data-date="${p.date}">
-                <td>${p.date}</td>
+                <td>${dateWithWeekday(p.date)}</td>
                 <td>${escapeHtml(p.title)}</td>
                 <td>${(p.tags || []).join(', ')}</td>
                 <td class="admin-row-actions">
@@ -164,7 +164,7 @@ import Layout from '../layouts/Layout.astro';
 
     async function openEditor(date: string) {
       editingDate = date;
-      editorTitle.textContent = `❯ 编辑 ${date}`;
+      editorTitle.textContent = `❯ 编辑 ${dateWithWeekday(date)}`;
       editorStatus.textContent = '';
       editorStatus.className = 'admin-status';
       editorWrap.hidden = false;
@@ -208,7 +208,7 @@ import Layout from '../layouts/Layout.astro';
     });
 
     async function deleteArticle(date: string) {
-      if (!confirm(`确定删除 ${date} 这篇文章吗？此操作不可恢复。`)) return;
+      if (!confirm(`确定删除 ${dateWithWeekday(date)} 这篇文章吗？此操作不可恢复。`)) return;
       try {
         const res = await fetch('/api/delete', {
           method: 'POST',

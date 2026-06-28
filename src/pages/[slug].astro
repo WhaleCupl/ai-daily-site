@@ -1,7 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { getSortedPosts, SITE } from '../posts';
+import { getSortedPosts, SITE, dateWithWeekday } from '../posts';
 
 export async function getStaticPaths() {
   const posts = await getSortedPosts();
@@ -47,7 +47,7 @@ const navItems = headings
 
   <div class="md article-head">
     <div class="meta">
-      <span>{date}</span>
+      <span>{dateWithWeekday(date)}</span>
       {tags.map((tag) => (
         <>
           <span class="sep">·</span>

@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getSortedPosts } from '../../posts';
+import { getSortedPosts, weekdayOf } from '../../posts';
 
 const posts = await getSortedPosts();
 
@@ -31,7 +31,7 @@ for (const post of posts) {
       <div class="arc-month">{g.key.replace('-', ' / ')}</div>
       {g.items.map((post) => (
         <a class="arc-row" href={`/${post.id}/`}>
-          <span class="arc-date">{post.data.date.slice(8)}</span>
+          <span class="arc-date">{post.data.date.slice(8)} {weekdayOf(post.data.date)}</span>
           <span class="arc-title">{post.data.title}</span>
         </a>
       ))}
