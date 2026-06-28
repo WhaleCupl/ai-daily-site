@@ -71,6 +71,14 @@ import Layout from '../layouts/Layout.astro';
 
     let editingDate: string | null = null;
 
+    const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    function dateWithWeekday(date: string): string {
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(date);
+      if (!m) return date;
+      const d = new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00Z`);
+      return `${date}-${WEEKDAYS[d.getUTCDay()]}`;
+    }
+
     async function loadStats() {
       try {
         const res = await fetch('/api/stats');
@@ -93,7 +101,7 @@ import Layout from '../layouts/Layout.astro';
             .map((v, i) => `<div class="admin-daily-val${empty[i] ? ' is-empty' : ''}">${v}</div>`)
             .join('')}</div>`;
         statsDailyEl.innerHTML = `<div class="admin-daily-grid">
-          ${col('日期', data.daily.map((d: any) => d.date))}
+          ${col('日期', data.daily.map((d: any) => dateWithWeekday(d.date)))}
           ${col('网页访问', data.daily.map((d: any) => String(d.page || 0)))}
           ${col('接口 / MCP 调用', data.daily.map((d: any) => String(d.api || 0)))}
         </div>`;

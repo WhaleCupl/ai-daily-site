@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getSortedPosts, SITE } from '../posts';
+import { getSortedPosts, SITE, dateWithWeekday } from '../posts';
 
 const allPosts = await getSortedPosts();
 const RECENT = 30;
@@ -33,7 +33,7 @@ const jsonLd = {
 
   {posts.map((post) => (
     <a class="news-row" href={`/${post.id}/`}>
-      <div class="news-date">{post.data.date}</div>
+      <div class="news-date">{dateWithWeekday(post.data.date)}</div>
       <div>
         <div class="nt">{post.data.title}</div>
         <div class="ns">{post.data.summary}</div>

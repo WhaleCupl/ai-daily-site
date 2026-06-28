@@ -4,6 +4,19 @@ export type DailyEntry = CollectionEntry<'daily'>;
 
 export const SITE = 'https://www.aidailyinsights.cn';
 
+const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+
+/** Given a YYYY-MM-DD string, return the Chinese weekday (e.g. 星期日). */
+export function weekdayOf(date: string): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  return WEEKDAYS[d.getUTCDay()];
+}
+
+/** Format a date string as YYYY-MM-DD-星期X. */
+export function dateWithWeekday(date: string): string {
+  return `${date}-${weekdayOf(date)}`;
+}
+
 /** All daily issues, newest first. */
 export async function getSortedPosts(): Promise<DailyEntry[]> {
   const entries = await getCollection('daily');
