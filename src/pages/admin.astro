@@ -49,7 +49,33 @@ import Layout from '../layouts/Layout.astro';
 
     <div id="editor-wrap" class="admin-editor" hidden>
       <h2><span id="editor-title">❯ 编辑</span></h2>
-      <textarea id="editor-textarea" rows="22"></textarea>
+
+      <div class="admin-fields">
+        <label class="admin-field">
+          <span class="admin-field-label">标题</span>
+          <input type="text" id="f-title" />
+        </label>
+        <label class="admin-field">
+          <span class="admin-field-label">摘要</span>
+          <textarea id="f-summary" rows="2"></textarea>
+        </label>
+        <label class="admin-field">
+          <span class="admin-field-label">标签</span>
+          <input type="text" id="f-tags" placeholder="用逗号分隔，如 OpenAI, 融资, 芯片" />
+        </label>
+        <label class="admin-field">
+          <span class="admin-field-label">来源 <span class="admin-field-opt">可选</span></span>
+          <input type="text" id="f-source" />
+        </label>
+      </div>
+
+      <div class="admin-bodybar">
+        <span class="admin-field-label">正文（Markdown）</span>
+        <button type="button" id="editor-preview-toggle" class="admin-btn-link">预览</button>
+      </div>
+      <textarea id="editor-textarea" rows="20"></textarea>
+      <div id="editor-preview" class="md admin-preview" hidden></div>
+
       <div class="admin-editor-actions">
         <button type="button" id="editor-save">保存修改</button>
         <button type="button" id="editor-cancel" class="admin-btn-secondary">取消</button>
@@ -59,6 +85,8 @@ import Layout from '../layouts/Layout.astro';
   </article>
 
   <script>
+    import yaml from 'js-yaml';
+
     const publishForm = document.getElementById('publish-form') as HTMLFormElement;
     const status = document.getElementById('status') as HTMLDivElement;
     const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
@@ -71,6 +99,16 @@ import Layout from '../layouts/Layout.astro';
     const editorStatus = document.getElementById('editor-status') as HTMLDivElement;
     const editorSaveBtn = document.getElementById('editor-save') as HTMLButtonElement;
     const editorCancelBtn = document.getElementById('editor-cancel') as HTMLButtonElement;
+
+    const fTitle = document.getElementById('f-title') as HTMLInputElement;
+    const fSummary = document.getElementById('f-summary') as HTMLTextAreaElement;
+    const fTags = document.getElementById('f-tags') as HTMLInputElement;
+    const fSource = document.getElementById('f-source') as HTMLInputElement;
+    const previewToggle = document.getElementById('editor-preview-toggle') as HTMLButtonElement;
+    const previewEl = document.getElementById('editor-preview') as HTMLDivElement;
+
+    // 原文里 frontmatter 之外、schema 未覆盖的额外字段，编辑时原样保留，保存时写回。
+    let extraFrontmatter: Record<string, unknown> = {};
 
     const statsTotalsEl = document.getElementById('stats-totals') as HTMLDivElement;
     const statsDailyEl = document.getElementById('stats-daily') as HTMLDivElement;
@@ -228,19 +266,116 @@ import Layout from '../layouts/Layout.astro';
       return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
     }
 
+    // 把原始 .md 拆成 { frontmatter 对象, 正文 }。frontmatter 用 js-yaml 解析。
+    function splitArticle(raw: string): { fm: Record<string, any>; body: string } {
+      const t = raw.replace(/^﻿/, '');
+      if (!t.startsWith('---')) return { fm: {}, body: t };
+      const end = t.indexOf('\n---', 3);
+      if (end === -1) return { fm: {}, body: t };
+      const fmText = t.slice(3, end);
+      const body = t.slice(end + 4).replace(/^\r?\n/, '');
+      let fm: Record<string, any> = {};
+      try {
+        const parsed = yaml.load(fmText);
+        if (parsed && typeof parsed === 'object') fm = parsed as Record<string, any>;
+      } catch {
+        /* 解析不了就当空，字段留空让用户重填，正文照常给出 */
+      }
+      return { fm, body };
+    }
+
+    // 从结构化字段重新拼出完整 .md。frontmatter 由 js-yaml 序列化，保证永远是合法 YAML，
+    // 用户在标题/摘要里写任何引号都不会再把构建搞崩。
+    function buildArticle(): string {
+      const tags = fTags.value.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+      const fm: Record<string, unknown> = {
+        ...extraFrontmatter,
+        date: editingDate,
+        title: fTitle.value.trim(),
+        summary: fSummary.value.trim(),
+        tags,
+      };
+      const source = fSource.value.trim();
+      if (source) fm.source = source;
+      else delete fm.source;
+      const fmText = yaml.dump(fm, { lineWidth: -1, forceQuotes: false }).trimEnd();
+      return `---\n${fmText}\n---\n\n${editorTextarea.value.trim()}\n`;
+    }
+
+    // 轻量 Markdown 预览渲染器：覆盖本站文章用到的子集（## 标题 / 粗体 / 行内代码 /
+    // 引用 / 列表 / 链接）。仅用于发布前自查排版，标签配色等站点效果以线上为准。
+    function renderMarkdown(src: string): string {
+      const inline = (s: string) =>
+        escapeHtml(s)
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      const lines = src.split('\n');
+      const out: string[] = [];
+      let para: string[] = [];
+      let list: string[] = [];
+      let quote: string[] = [];
+      const flushPara = () => { if (para.length) { out.push(`<p>${inline(para.join(' '))}</p>`); para = []; } };
+      const flushList = () => { if (list.length) { out.push(`<ul>${list.map((i) => `<li>${inline(i)}</li>`).join('')}</ul>`); list = []; } };
+      const flushQuote = () => { if (quote.length) { out.push(`<blockquote>${inline(quote.join(' '))}</blockquote>`); quote = []; } };
+      const flushAll = () => { flushPara(); flushList(); flushQuote(); };
+      for (const line of lines) {
+        const t = line.trim();
+        const h = /^(#{1,4})\s+(.*)$/.exec(t);
+        if (h) { flushAll(); const lv = h[1].length; out.push(`<h${lv}>${inline(h[2])}</h${lv}>`); continue; }
+        if (t.startsWith('>')) { flushPara(); flushList(); quote.push(t.replace(/^>\s?/, '')); continue; }
+        if (/^[-*]\s+/.test(t)) { flushPara(); flushQuote(); list.push(t.replace(/^[-*]\s+/, '')); continue; }
+        if (t === '') { flushAll(); continue; }
+        flushList(); flushQuote(); para.push(t);
+      }
+      flushAll();
+      return out.join('\n');
+    }
+
+    function showEditMode() {
+      previewEl.hidden = true;
+      editorTextarea.hidden = false;
+      previewToggle.textContent = '预览';
+    }
+
+    previewToggle.addEventListener('click', () => {
+      if (previewEl.hidden) {
+        previewEl.innerHTML = renderMarkdown(editorTextarea.value);
+        previewEl.hidden = false;
+        editorTextarea.hidden = true;
+        previewToggle.textContent = '继续编辑';
+      } else {
+        showEditMode();
+      }
+    });
+
     async function openEditor(date: string) {
       editingDate = date;
       editorTitle.textContent = `❯ 编辑 ${dateWithWeekday(date)}`;
       editorStatus.textContent = '';
       editorStatus.className = 'admin-status';
       editorWrap.hidden = false;
+      showEditMode();
+      extraFrontmatter = {};
+      fTitle.value = '';
+      fSummary.value = '';
+      fTags.value = '';
+      fSource.value = '';
       editorTextarea.value = '加载中…';
       editorWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
       try {
         const res = await fetch(`/api/article?date=${date}`);
         const data = await res.json();
         if (!data.ok) throw new Error(data.error);
-        editorTextarea.value = data.content;
+        const { fm, body } = splitArticle(data.content);
+        // 已知字段填进输入框，其余未知字段存到 extraFrontmatter，保存时原样写回。
+        const { date: _d, title, summary, tags, source, ...rest } = fm;
+        extraFrontmatter = rest;
+        fTitle.value = title ?? '';
+        fSummary.value = summary ?? '';
+        fTags.value = Array.isArray(tags) ? tags.join(', ') : (tags ?? '');
+        fSource.value = source ?? '';
+        editorTextarea.value = body;
       } catch (err) {
         editorTextarea.value = '';
         setStatus(editorStatus, false, `加载失败：${err instanceof Error ? err.message : String(err)}`);
@@ -254,10 +389,14 @@ import Layout from '../layouts/Layout.astro';
 
     editorSaveBtn.addEventListener('click', async () => {
       if (!editingDate) return;
+      if (!fTitle.value.trim() || !fSummary.value.trim()) {
+        setStatus(editorStatus, false, '标题和摘要不能为空');
+        return;
+      }
       editorSaveBtn.disabled = true;
       setStatus(editorStatus, true, '保存中…');
       try {
-        const blob = new Blob([editorTextarea.value], { type: 'text/markdown' });
+        const blob = new Blob([buildArticle()], { type: 'text/markdown' });
         const file = new File([blob], `${editingDate}.md`, { type: 'text/markdown' });
         const formData = new FormData();
         formData.append('file', file);
