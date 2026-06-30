@@ -20,6 +20,12 @@ import Layout from '../layouts/Layout.astro';
     </div>
     <div id="stats-daily" class="admin-list"></div>
 
+    <h2>❯ 部署状态</h2>
+    <p class="admin-hint">每次发布 / 编辑 / 删除都会提交到仓库并触发一次构建部署。若某次显示「失败」，多半是 frontmatter 格式有误——线上不会更新，修好后重新保存即可。</p>
+    <div id="deploys" class="admin-list">
+      <p class="admin-hint">加载中…</p>
+    </div>
+
     <h2>❯ 发布新一期</h2>
     <p>
       选择 <code>.md</code> 文件直接发布，文件名随意。上线日期按「内容 frontmatter 的
@@ -69,6 +75,8 @@ import Layout from '../layouts/Layout.astro';
     const statsTotalsEl = document.getElementById('stats-totals') as HTMLDivElement;
     const statsDailyEl = document.getElementById('stats-daily') as HTMLDivElement;
 
+    const deploysEl = document.getElementById('deploys') as HTMLDivElement;
+
     let editingDate: string | null = null;
 
     const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
@@ -108,6 +116,64 @@ import Layout from '../layouts/Layout.astro';
       } catch (err) {
         statsTotalsEl.innerHTML = `<p class="admin-hint">统计加载失败：${err instanceof Error ? err.message : String(err)}</p>`;
       }
+    }
+
+    // 把一次运行映射成 {label, cls}：成功=绿、失败/取消=红、进行中/排队=主色脉动。
+    function deployState(run: any): { label: string; cls: string } {
+      if (run.status !== 'completed') {
+        return { label: run.status === 'queued' ? '排队中' : '构建中', cls: 'running' };
+      }
+      if (run.conclusion === 'success') return { label: '成功', cls: 'ok' };
+      if (run.conclusion === 'cancelled') return { label: '已取消', cls: 'err' };
+      return { label: '失败', cls: 'err' };
+    }
+
+    function relativeTime(iso: string): string {
+      const diff = Date.now() - new Date(iso).getTime();
+      const min = Math.round(diff / 60000);
+      if (min < 1) return '刚刚';
+      if (min < 60) return `${min} 分钟前`;
+      const hr = Math.round(min / 60);
+      if (hr < 24) return `${hr} 小时前`;
+      return `${Math.round(hr / 24)} 天前`;
+    }
+
+    async function loadDeploys() {
+      try {
+        const res = await fetch('/api/deploys');
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error);
+        const runs = data.runs || [];
+        if (runs.length === 0) {
+          deploysEl.innerHTML = '<p class="admin-hint">还没有部署记录</p>';
+          return;
+        }
+        const rows = runs
+          .map((r: any) => {
+            const s = deployState(r);
+            return `
+              <tr>
+                <td><span class="admin-deploy-badge ${s.cls}"><span class="admin-deploy-dot"></span>${s.label}</span></td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${relativeTime(r.createdAt)}</td>
+                <td class="admin-row-actions"><a class="admin-btn-link" href="${r.url}" target="_blank" rel="noopener">日志</a></td>
+              </tr>`;
+          })
+          .join('');
+        deploysEl.innerHTML = `
+          <table>
+            <thead><tr><th>状态</th><th>提交</th><th>时间</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      } catch (err) {
+        deploysEl.innerHTML = `<p class="admin-hint">部署状态加载失败：${err instanceof Error ? err.message : String(err)}</p>`;
+      }
+    }
+
+    // 一次提交后 Actions 要几秒才登记到列表，先刷一次、再延迟刷一次，能看到新行冒出来。
+    function refreshDeploysSoon() {
+      loadDeploys();
+      setTimeout(loadDeploys, 6000);
     }
 
     function setStatus(el: HTMLDivElement, ok: boolean, text: string) {
@@ -200,6 +266,7 @@ import Layout from '../layouts/Layout.astro';
         if (!data.ok) throw new Error(data.error);
         setStatus(editorStatus, true, data.message);
         loadList();
+        refreshDeploysSoon();
       } catch (err) {
         setStatus(editorStatus, false, err instanceof Error ? err.message : String(err));
       } finally {
@@ -223,6 +290,7 @@ import Layout from '../layouts/Layout.astro';
           editingDate = null;
         }
         loadList();
+        refreshDeploysSoon();
       } catch (err) {
         setStatus(status, false, err instanceof Error ? err.message : String(err));
       }
@@ -247,6 +315,7 @@ import Layout from '../layouts/Layout.astro';
           setStatus(status, true, data.message);
           publishForm.reset();
           loadList();
+          refreshDeploysSoon();
         } else {
           setStatus(status, false, data.error);
         }
@@ -259,5 +328,6 @@ import Layout from '../layouts/Layout.astro';
 
     loadList();
     loadStats();
+    loadDeploys();
   </script>
 </Layout>

@@ -98,3 +98,10 @@
 .admin-daily-val{color:var(--primary);font-variant-numeric:tabular-nums;height:34px;display:flex;align-items:center;font-size:15px;font-weight:700;line-height:1}
 .admin-daily-val+.admin-daily-val{border-top:1px solid var(--hair)}
 .admin-daily-val.is-empty{color:var(--dim);font-weight:600}
+.admin-deploy-badge{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:13px;white-space:nowrap}
+.admin-deploy-badge.ok{color:var(--green)}
+.admin-deploy-badge.err{color:var(--red)}
+.admin-deploy-badge.running{color:var(--primary)}
+.admin-deploy-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.admin-deploy-badge.running .admin-deploy-dot{animation:admin-pulse 1.1s ease-in-out infinite}
+@keyframes admin-pulse{0%,100%{opacity:1}50%{opacity:.25}}
