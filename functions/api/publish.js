@@ -3,6 +3,7 @@
 //
 // 需要在 Cloudflare Pages 项目的环境变量/secrets 里配置 GITHUB_TOKEN
 // （fine-grained PAT，只需 Contents: Read & write，scope 到本仓库）。
+import yaml from 'js-yaml';
 import { githubConfig, articlePath, putFile, jsonResponse, HttpError } from '../_lib/github.js';
 import { isCliMarkdown, convertCliMarkdown } from '../_lib/cli-markdown.js';
 
@@ -52,10 +53,31 @@ export async function onRequestPost(context) {
     return jsonResponse({ ok: false, error: '文件缺少 frontmatter（应以 --- 开头）' }, 400);
   }
   const frontmatterEnd = trimmed.indexOf('---', 3);
-  const frontmatter = frontmatterEnd > -1 ? trimmed.slice(0, frontmatterEnd) : '';
-  for (const field of ['date:', 'title:', 'summary:']) {
-    if (!frontmatter.includes(field)) {
-      return jsonResponse({ ok: false, error: `frontmatter 里缺少 ${field.replace(':', '')} 字段` }, 400);
+  if (frontmatterEnd === -1) {
+    return jsonResponse({ ok: false, error: 'frontmatter 没有结束的 --- 分隔线' }, 400);
+  }
+  const frontmatter = trimmed.slice(3, frontmatterEnd);
+
+  // 真正用 YAML 解析 frontmatter——光检查字段名存在并不够：
+  // summary 里嵌了未转义的英文引号之类的问题，会让构建期 astro 解析 YAML 失败，
+  // 导致整次部署崩溃、前台无任何变化（看起来就是“后台编辑不生效”）。
+  // 在这里拦截，把错误直接回显给后台，避免静默的坏部署。
+  let parsed;
+  try {
+    parsed = yaml.load(frontmatter);
+  } catch (err) {
+    const reason = err && err.reason ? err.reason : (err && err.message) || '未知错误';
+    return jsonResponse(
+      { ok: false, error: `frontmatter YAML 解析失败：${reason}。常见原因：标题/摘要用英文引号包裹时，里面又出现了英文引号，请把内部引号改成中文引号「」或“”。` },
+      400
+    );
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    return jsonResponse({ ok: false, error: 'frontmatter 不是合法的键值对' }, 400);
+  }
+  for (const field of ['date', 'title', 'summary']) {
+    if (parsed[field] === undefined || parsed[field] === null || parsed[field] === '') {
+      return jsonResponse({ ok: false, error: `frontmatter 里缺少 ${field} 字段` }, 400);
     }
   }
 
