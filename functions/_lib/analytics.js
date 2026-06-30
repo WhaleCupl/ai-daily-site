@@ -14,6 +14,7 @@ export function classifyPath(pathname) {
     return null;
   }
   if (pathname === '/index.json' || pathname === '/feed.xml' || pathname === '/llms.txt') return 'api';
+  if (pathname === '/search' || pathname === '/search-index.json') return 'api';
   if (/^\/\d{4}-\d{2}-\d{2}\.json$/.test(pathname)) return 'api';
   return 'page';
 }
