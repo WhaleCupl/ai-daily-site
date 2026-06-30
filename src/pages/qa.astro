@@ -57,7 +57,9 @@ import Layout from '../layouts/Layout.astro';
         <tr><td>看最近几期</td><td>「最近有什么 AI 新闻」</td><td><code>list_latest</code></td></tr>
         <tr><td>看今天 / 最新一期</td><td>「看看今天的 AI Daily」</td><td><code>get_latest</code></td></tr>
         <tr><td>看某一天全部内容</td><td>「打开 6 月 24 日那期」</td><td><code>get_article</code></td></tr>
-        <tr><td>定向筛选公司 / 主题</td><td>「搜一下关于 Anthropic 的新闻」</td><td><code>search</code></td></tr>
+        <tr><td>看一段时间 / 这一周</td><td>「最近三天有什么大新闻」</td><td><code>get_range</code></td></tr>
+        <tr><td>按标签列出某主题</td><td>「列出所有带 OpenAI 标签的期」</td><td><code>list_by_tag</code></td></tr>
+        <tr><td>全文 / 标签检索</td><td>「搜一下关于 Anthropic 的新闻」</td><td><code>search</code></td></tr>
       </tbody>
     </table>
 
@@ -85,7 +87,9 @@ GET https://www.aidailyinsights.cn/2026-06-24/</code></pre>
     <p>用 <code>curl</code> 命令行验证也可以：</p>
 
     <pre><code>curl -s https://www.aidailyinsights.cn/index.json | jq '.posts[0]'
-curl -s https://www.aidailyinsights.cn/feed.xml      # RSS 订阅 / 轮询</code></pre>
+curl -s https://www.aidailyinsights.cn/feed.xml      # RSS 订阅 / 轮询
+curl -s 'https://www.aidailyinsights.cn/search?q=Anthropic&limit=3' | jq '.results[].title'
+curl -s 'https://www.aidailyinsights.cn/search?tag=OpenAI' | jq '.count'   # 按标签筛</code></pre>
 
     <h2>❯ 用 MCP 一键接入（Claude / Cursor）</h2>
     <p>我们提供了官方 <strong>MCP server</strong>：<code>ai-daily-insights-mcp</code>，已发布到 npm。装上后，你的 AI 助手就能直接列出、读取、检索每日资讯，无需手动喂 URL。</p>
@@ -100,7 +104,21 @@ curl -s https://www.aidailyinsights.cn/feed.xml      # RSS 订阅 / 轮询</code
     }
   }
 }`}</code></pre>
-    <p>提供四个工具：<code>list_latest</code>（最近 N 期）、<code>get_latest</code>（最新一期）、<code>get_article</code>（按日期取单期结构化正文）、<code>search</code>（跨期关键词检索）。源码与文档见 <a href="https://www.npmjs.com/package/ai-daily-insights-mcp">npm</a> / <a href="https://github.com/WhaleCupl/ai-daily-insights-mcp">GitHub</a>。</p>
+    <p>提供六个工具：</p>
+    <table>
+      <thead>
+        <tr><th>工具</th><th>作用</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>get_latest</code></td><td>最新一期，含全部新闻条目，一次取回。</td></tr>
+        <tr><td><code>list_latest</code></td><td>最近 N 期的列表（日期 / 标题 / 摘要 / 标签 / URL）。</td></tr>
+        <tr><td><code>get_article</code></td><td>按日期取单期结构化正文 <code>{`{index, title, signal, body}`}</code>。</td></tr>
+        <tr><td><code>get_range</code></td><td>取某个日期区间内的所有期（如最近一周），并行抓取。</td></tr>
+        <tr><td><code>list_by_tag</code></td><td>列出带某个标签（公司 / 主题）的期，标签不区分大小写。</td></tr>
+        <tr><td><code>search</code></td><td>跨全站的全文 + 标签检索，由服务端 <code>/search</code> 一次返回。</td></tr>
+      </tbody>
+    </table>
+    <p>响应会在本地做几分钟的内存缓存（默认 5 分钟，可用 <code>AI_DAILY_CACHE_TTL_MS</code> 调整），连续提问不会反复打站。源码与文档见 <a href="https://www.npmjs.com/package/ai-daily-insights-mcp">npm</a> / <a href="https://github.com/WhaleCupl/ai-daily-insights-mcp">GitHub</a>。</p>
 
     <h2>❯ 在终端里读（CLI）</h2>
     <p>如果你更习惯命令行，用 <code>ai-daily-insights</code> 这个 CLI 直接在终端速览，无需打开浏览器：</p>
@@ -113,6 +131,8 @@ npx ai-daily-insights search Anthropic # 跨期检索</code></pre>
     <ul>
       <li><strong>发现入口：</strong><code>/llms.txt</code>，给 Agent 的站点说明和主要端点。</li>
       <li><strong>索引入口：</strong><code>/index.json</code>，包含日期、标题、摘要和文章 URL。</li>
+      <li><strong>单期结构化：</strong><code>/{`{date}`}.json</code>，单期拆成 <code>{`{index, title, signal, body}`}</code> 条目。</li>
+      <li><strong>检索入口：</strong><code>/search?q=…&amp;tag=…</code>，全文 + 标签检索，一次返回；<code>/search-index.json</code> 是全部条目的扁平索引。</li>
       <li><strong>订阅入口：</strong><code>/feed.xml</code>，适合自动更新和轮询。</li>
       <li><strong>引用规则：</strong>引用时保留文章 URL、发布日期和标题，不把摘要当成完整事实来源。</li>
     </ul>
@@ -121,7 +141,12 @@ npx ai-daily-insights search Anthropic # 跨期检索</code></pre>
       <p><strong>signal</strong> 对 Agent 来说，这个站点不是“网页外观优先”的内容库，而是“可被发现、可被引用、可被组合”的资讯节点。</p>
     </blockquote>
 
-    <h2>❯ 之后可以继续增强什么？</h2>
-    <p>下一步可以增加每篇文章的 JSON 版本，例如 <code>/2026-06-24/index.json</code>，把标题、摘要、正文段落、关键词、来源链接和更新时间拆开。这样 Agent 就不用解析 HTML，也能稳定抽取内容。</p>
+    <h2>❯ 最近增强了什么？</h2>
+    <ul>
+      <li><strong>结构化单期 JSON：</strong>每一期都有 <code>/{`{date}`}.json</code>，正文已拆成 <code>{`{index, title, signal, body}`}</code> 条目，Agent 无需解析 HTML。</li>
+      <li><strong>全文 + 标签检索：</strong>新增服务端 <code>/search</code> 接口和 <code>/search-index.json</code> 扁平索引，一次调用即可跨全站检索。</li>
+      <li><strong>MCP 扩到六个工具：</strong>新增 <code>get_range</code>（按时间段）、<code>list_by_tag</code>（按标签），并加了内存缓存与并行抓取。</li>
+    </ul>
+    <p>后续方向：来源链接与更新时间字段化、按主题聚合的专题页，以及更细粒度的条目级标签。</p>
   </article>
 </Layout>
