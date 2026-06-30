@@ -45,11 +45,8 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           [ -z "$SENDKEY" ] && { echo "未配置 SERVERCHAN_SENDKEY，跳过通知"; exit 0; }
+          DESP=$(printf '提交：%s\n\n构建或部署失败，本次改动**没有上线**。多半是文章 frontmatter 格式有误，修好后重新保存即可。\n\n查看日志：%s' "$COMMIT_MSG" "$RUN_URL")
           curl -s "https://sctapi.ftqq.com/${SENDKEY}.send" \
             --data-urlencode "title=🚨 AI Daily 部署失败，线上未更新" \
-            --data-urlencode "desp=提交：${COMMIT_MSG}
-
-构建或部署失败，本次改动**没有上线**。多半是文章 frontmatter 格式有误，修好后重新保存即可。
-
-查看日志：${RUN_URL}" > /dev/null
+            --data-urlencode "desp=$DESP" > /dev/null
           echo "已推送失败通知"
