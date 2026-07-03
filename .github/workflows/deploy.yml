@@ -35,6 +35,35 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx -y wrangler@4 pages deploy dist --project-name=ai-daily-site --branch=main --commit-dirty=true
 
+      # 部署成功后主动通知搜索引擎（SEO）。推送失败不影响部署结果。
+      # IndexNow 覆盖 Bing 等；key 文件托管在 public/ 下，本身不是机密。
+      - name: Ping search engines (IndexNow + Baidu)
+        if: success()
+        env:
+          BAIDU_PUSH_TOKEN: ${{ secrets.BAIDU_PUSH_TOKEN }}
+        run: |
+          SITE="https://www.aidailyinsights.cn"
+          KEY="10c2fc4cd860c6a8fff8e5dfbf8cc735"
+          # 从 sitemap 提取全部 URL（构建产物里就有）
+          URLS=$(grep -o '<loc>[^<]*</loc>' dist/sitemap.xml | sed -e 's/<[^>]*>//g')
+          COUNT=$(echo "$URLS" | wc -l | tr -d ' ')
+          echo "共 $COUNT 个 URL 待推送"
+          # IndexNow（Bing 等）
+          JSON_URLS=$(echo "$URLS" | sed 's/.*/"&"/' | paste -sd, -)
+          curl -s -X POST "https://api.indexnow.org/indexnow" \
+            -H 'Content-Type: application/json; charset=utf-8' \
+            -d "{\"host\":\"www.aidailyinsights.cn\",\"key\":\"$KEY\",\"keyLocation\":\"$SITE/$KEY.txt\",\"urlList\":[$JSON_URLS]}" \
+            && echo "IndexNow 推送完成" || echo "IndexNow 推送失败（忽略）"
+          # 百度主动推送（需在百度站长平台获取 token 并配置 BAIDU_PUSH_TOKEN secret）
+          if [ -n "$BAIDU_PUSH_TOKEN" ]; then
+            echo "$URLS" | curl -s -X POST \
+              "http://data.zz.baidu.com/urls?site=$SITE&token=$BAIDU_PUSH_TOKEN" \
+              -H 'Content-Type: text/plain' --data-binary @- || true
+            echo "百度推送完成"
+          else
+            echo "未配置 BAIDU_PUSH_TOKEN，跳过百度推送"
+          fi
+
       # 构建/部署失败时推一条到微信（Server酱）。没配 SENDKEY 就静默跳过，不影响别的。
       # 动态值都走 env 传入，避免 commit message 里的特殊字符注入到 shell。
       - name: Notify on failure

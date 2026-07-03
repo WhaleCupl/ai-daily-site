@@ -1,0 +1,43 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getTagIndex, SITE, ORG_JSONLD, tagUrl } from '../../posts';
+
+const tagIndex = await getTagIndex();
+const tags = [...tagIndex.entries()];
+const description = `AI Daily Insights 全部话题标签（${tags.length} 个）：按公司、模型、赛道浏览每日 AI 资讯。`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: '话题标签 · AI Daily Insights',
+  description,
+  url: `${SITE}/tag/`,
+  inLanguage: 'zh-CN',
+  publisher: ORG_JSONLD,
+};
+---
+
+<Layout title="话题标签 · AI Daily Insights" description={description} jsonLd={jsonLd}>
+  <a class="backnav" href="/">
+    <span class="back-arrow">←</span>
+    <span class="back-label">返回 AI Daily 首页</span>
+    <span class="back-cmd">cd ~/news</span>
+  </a>
+
+  <section class="hero">
+    <h1 class="brand">tags/<span class="cursor"></span></h1>
+    <p class="slogan">{tags.length} 个话题 · 按公司、模型、赛道浏览</p>
+  </section>
+
+  <hr class="rule" />
+
+  <div class="cmd"><span class="pr">$</span>ls ./tags <span class="flag">--sort=count</span></div>
+
+  <section class="agentbar">
+    <div class="agent-links">
+      {tags.map(([tag, posts]) => (
+        <a class="chip" href={tagUrl(tag)}><span class="dotk"></span>#{tag} ({posts.length})</a>
+      ))}
+    </div>
+  </section>
+</Layout>

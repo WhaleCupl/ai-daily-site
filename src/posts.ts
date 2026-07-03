@@ -23,6 +23,33 @@ export async function getSortedPosts(): Promise<DailyEntry[]> {
   return entries.sort((a, b) => (a.data.date < b.data.date ? 1 : -1));
 }
 
+/** All distinct tags with their posts, most-used tag first. */
+export async function getTagIndex(): Promise<Map<string, DailyEntry[]>> {
+  const posts = await getSortedPosts();
+  const map = new Map<string, DailyEntry[]>();
+  for (const post of posts) {
+    for (const tag of post.data.tags) {
+      const list = map.get(tag) ?? [];
+      list.push(post);
+      map.set(tag, list);
+    }
+  }
+  return new Map([...map.entries()].sort((a, b) => b[1].length - a[1].length));
+}
+
+/** URL path for a tag page (tag kept as-is; browsers/crawlers handle the encoding). */
+export function tagUrl(tag: string): string {
+  return `/tag/${encodeURIComponent(tag)}/`;
+}
+
+/** Shared Organization node for JSON-LD publisher/author. */
+export const ORG_JSONLD = {
+  '@type': 'Organization',
+  name: 'AI Daily Insights',
+  url: SITE,
+  logo: { '@type': 'ImageObject', url: `${SITE}/favicon.svg` },
+};
+
 /** Parse the markdown body into structured news items (for agent-facing JSON). */
 export function parseItems(body: string) {
   const parts = body.split(/^## /m).slice(1);

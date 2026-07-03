@@ -1,7 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { getSortedPosts, SITE, dateWithWeekday } from '../posts';
+import { getSortedPosts, SITE, ORG_JSONLD, dateWithWeekday, tagUrl } from '../posts';
 
 export async function getStaticPaths() {
   const posts = await getSortedPosts();
@@ -9,10 +9,13 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { date, title, summary, tags } = post.data;
+const { date, title, summary, tags, image, summary_en } = post.data;
 const { Content, headings } = await render(post);
 
 const articleUrl = `${SITE}/${post.id}/`;
+const navItems = headings
+  .filter((h) => h.depth === 2)
+  .map((h) => ({ id: h.slug, title: h.text.replace(/^❯\s*/, '').trim() }));
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'NewsArticle',
@@ -24,12 +27,22 @@ const jsonLd = {
   url: articleUrl,
   mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
   keywords: tags.join(', '),
-  author: { '@type': 'Organization', name: 'AI Daily Insights' },
-  publisher: { '@type': 'Organization', name: 'AI Daily Insights', url: SITE },
+  ...(image ? { image: new URL(image, SITE).href } : {}),
+  ...(summary_en ? { abstract: summary_en } : {}),
+  author: ORG_JSONLD,
+  publisher: ORG_JSONLD,
+  // 每条新闻作为可寻址的子条目暴露给搜索引擎（锚点级）。
+  hasPart: navItems.map((item, i) => ({
+    '@type': 'NewsArticle',
+    position: i + 1,
+    headline: item.title,
+    url: `${articleUrl}#${item.id}`,
+    datePublished: date,
+    inLanguage: 'zh-CN',
+    isPartOf: { '@type': 'NewsArticle', '@id': articleUrl },
+    publisher: ORG_JSONLD,
+  })),
 };
-const navItems = headings
-  .filter((h) => h.depth === 2)
-  .map((h) => ({ id: h.slug, title: h.text.replace(/^❯\s*/, '').trim() }));
 ---
 
 <Layout
@@ -37,6 +50,7 @@ const navItems = headings
   description={summary}
   type="article"
   publishedTime={date}
+  image={image}
   jsonLd={jsonLd}
 >
   <a class="backnav" href="/">
@@ -51,7 +65,7 @@ const navItems = headings
       {tags.map((tag) => (
         <>
           <span class="sep">·</span>
-          <span class="tag">#{tag}</span>
+          <a class="tag" href={tagUrl(tag)}>#{tag}</a>
         </>
       ))}
       <span class="sep">·</span>

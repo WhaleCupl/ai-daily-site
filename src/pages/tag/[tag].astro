@@ -1,0 +1,65 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getTagIndex, SITE, ORG_JSONLD, dateWithWeekday, tagUrl } from '../../posts';
+
+export async function getStaticPaths() {
+  const tagIndex = await getTagIndex();
+  return [...tagIndex.entries()].map(([tag, posts]) => ({
+    params: { tag },
+    props: { tag, posts },
+  }));
+}
+
+const { tag, posts } = Astro.props;
+const title = `#${tag} 相关 AI 资讯`;
+const description = `${tag} 的最新 AI 资讯与深度解读，共 ${posts.length} 期日报涉及该话题 — AI Daily Insights。`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: title,
+  description,
+  url: new URL(tagUrl(tag), SITE).href,
+  inLanguage: 'zh-CN',
+  isPartOf: { '@type': 'WebSite', name: 'AI Daily Insights', url: SITE },
+  publisher: ORG_JSONLD,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: posts.length,
+    itemListElement: posts.map((post, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${SITE}/${post.id}/`,
+      name: post.data.title,
+    })),
+  },
+};
+---
+
+<Layout title={`${title} · AI Daily Insights`} description={description} jsonLd={jsonLd}>
+  <a class="backnav" href="/">
+    <span class="back-arrow">←</span>
+    <span class="back-label">返回 AI Daily 首页</span>
+    <span class="back-cmd">cd ~/news</span>
+  </a>
+
+  <section class="hero">
+    <h1 class="brand">#{tag}<span class="cursor"></span></h1>
+    <p class="slogan">{posts.length} 期日报涉及该话题</p>
+  </section>
+
+  <hr class="rule" />
+
+  <div class="cmd"><span class="pr">$</span>grep -l "{tag}" ./news/*.md</div>
+
+  {posts.map((post) => (
+    <a class="news-row" href={`/${post.id}/`}>
+      <div class="news-date">{dateWithWeekday(post.data.date)}</div>
+      <div>
+        <div class="nt">{post.data.title}</div>
+        <div class="ns">{post.data.summary}</div>
+      </div>
+      <div class="stat">[parsed]</div>
+    </a>
+  ))}
+</Layout>

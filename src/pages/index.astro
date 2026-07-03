@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getSortedPosts, SITE, dateWithWeekday } from '../posts';
+import { getSortedPosts, SITE, ORG_JSONLD, dateWithWeekday } from '../posts';
 
 const allPosts = await getSortedPosts();
 const RECENT = 30;
@@ -15,7 +15,15 @@ const jsonLd = {
   url: SITE,
   description: 'AI Daily Insights — 每日 AI 资讯，为人与 Agent 而生',
   inLanguage: 'zh-CN',
-  publisher: { '@type': 'Organization', name: 'AI Daily Insights', url: SITE },
+  publisher: ORG_JSONLD,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${SITE}/search?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
 };
 ---
 

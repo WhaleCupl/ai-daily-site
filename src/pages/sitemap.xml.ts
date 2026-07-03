@@ -1,12 +1,17 @@
-import { getSortedPosts, SITE } from '../posts';
+import { getSortedPosts, getTagIndex, SITE, tagUrl } from '../posts';
 
 export async function GET() {
   const posts = await getSortedPosts();
-  const staticUrls = ['/', '/qa/', '/archive/'];
+  const tagIndex = await getTagIndex();
+  const staticUrls = ['/', '/qa/', '/archive/', '/tag/'];
 
   const urls = [
     ...staticUrls.map((path) => ({ loc: `${SITE}${path}`, lastmod: posts[0]?.data.date })),
     ...posts.map((post) => ({ loc: `${SITE}/${post.id}/`, lastmod: post.data.date })),
+    ...[...tagIndex.entries()].map(([tag, tagPosts]) => ({
+      loc: `${SITE}${tagUrl(tag)}`,
+      lastmod: tagPosts[0]?.data.date,
+    })),
   ];
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>

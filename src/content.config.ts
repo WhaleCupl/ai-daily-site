@@ -11,6 +11,10 @@ const daily = defineCollection({
     summary: z.string(),
     tags: z.array(z.string()).default([]),
     source: z.string().optional(),
+    /** English one-paragraph TL;DR — surfaces the issue in English AI retrieval. */
+    summary_en: z.string().optional(),
+    /** Root-relative or absolute URL of the issue's cover image (og:image). */
+    image: z.string().optional(),
   }),
 });
 

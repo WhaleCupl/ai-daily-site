@@ -10,6 +10,8 @@ export async function GET() {
     '## Primary endpoints',
     `- Home: ${SITE}/`,
     `- Q&A and agent guide: ${SITE}/qa/`,
+    `- Full text of latest issues (single file): ${SITE}/llms-full.txt`,
+    `- Browse by tag: ${SITE}/tag/`,
     `- JSON index: ${SITE}/index.json`,
     `- RSS feed: ${SITE}/feed.xml`,
     `- Per-article JSON: ${SITE}/{date}.json  (e.g. ${SITE}/${posts[0]?.id}.json)`,
