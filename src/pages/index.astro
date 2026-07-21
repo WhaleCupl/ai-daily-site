@@ -29,15 +29,15 @@ const jsonLd = {
 
 <Layout jsonLd={jsonLd}>
   <section class="hero">
-    <h1 class="brand">AI Daily Insights<span class="cursor"></span></h1>
+    <h1 class="brand">AI Daily Insights</h1>
     <p class="slogan">每日 AI 资讯 · 为人与 Agent 而生</p>
-    <div class="bootline"><span class="dotk"></span>system ready · {allPosts.length} entries indexed · last sync {dateWithWeekday(posts[0].data.date)} · booted in 0.08s</div>
+    <div class="bootline">{allPosts.length} 期已归档 · 最近更新 {dateWithWeekday(posts[0].data.date)}</div>
   </section>
 
   <hr class="rule" />
 
-  <div class="cmd"><span class="pr">$</span>ls ./news <span class="flag">--sort=date</span></div>
-  <div class="listhdr"><span>date</span><span>./news/*.md &nbsp; ({allPosts.length} entries)</span></div>
+  
+  <div class="listhdr"><span>日期</span><span>{allPosts.length} 期</span></div>
 
   {posts.map((post) => (
     <a class="news-row" href={`/${post.id}/`}>
@@ -46,7 +46,6 @@ const jsonLd = {
         <div class="nt">{post.data.title}</div>
         <div class="ns">{post.data.summary}</div>
       </div>
-      <div class="stat">[parsed]</div>
     </a>
   ))}
 
