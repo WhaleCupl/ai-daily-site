@@ -23,7 +23,7 @@
 .tbtn{font:inherit;letter-spacing:1px;text-transform:uppercase;color:var(--dim);border:0;border-right:1px solid var(--hair-strong);cursor:pointer;background:transparent;border-radius:0;padding:6px 13px;font-size:11.5px;transition:all .15s}
 .tbtn:last-child{border-right:0}.tbtn:hover,.tbtn[aria-pressed=true]{background:var(--primary);color:#fff;border-color:var(--primary)}
 .stage{z-index:2;max-width:840px;margin:0 auto;padding:30px 26px 80px;position:relative}
-.hero{padding-top:8px}.cmd{color:var(--text);margin:0 0 4px;font-size:14px}.cmd .pr{color:var(--primary);margin-right:8px;font-weight:700}.cmd .flag{color:var(--dim)}
+.hero{padding-top:8px}.cmd{color:var(--faint);letter-spacing:1.2px;text-transform:uppercase;margin:0 0 10px;font-size:11.5px;font-weight:700}.cmd .pr{color:var(--primary);margin-right:8px;font-weight:700}.cmd .flag{color:var(--dim)}
 
 .brand{color:var(--primary);letter-spacing:.5px;margin:8px 0 6px;font-size:clamp(32px,6vw,62px);font-weight:800;line-height:1.05}
 .slogan{color:var(--dim);margin:0 0 4px;font-size:14px}.bootline{color:var(--faint);letter-spacing:.5px;margin-top:13px;font-size:12px;line-height:1.6}.dotk{background:var(--cyan);vertical-align:1px;border-radius:50%;width:6px;height:6px;margin-right:8px;display:inline-block}

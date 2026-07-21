@@ -40,7 +40,6 @@ const jsonLd = {
   <a class="backnav" href="/">
     <span class="back-arrow">←</span>
     <span class="back-label">返回 AI Daily 首页</span>
-    <span class="back-cmd">cd ~/news</span>
   </a>
 
   <section class="hero">
@@ -50,7 +49,7 @@ const jsonLd = {
 
   <hr class="rule" />
 
-  <div class="cmd"><span class="pr">$</span>grep -l "{tag}" ./news/*.md</div>
+  <div class="cmd">标签 #{tag} 的全部文章</div>
 
   {posts.map((post) => (
     <a class="news-row" href={`/${post.id}/`}>
@@ -59,7 +58,6 @@ const jsonLd = {
         <div class="nt">{post.data.title}</div>
         <div class="ns">{post.data.summary}</div>
       </div>
-      <div class="stat">[parsed]</div>
     </a>
   ))}
 </Layout>

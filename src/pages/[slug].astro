@@ -56,7 +56,6 @@ const jsonLd = {
   <a class="backnav" href="/">
     <span class="back-arrow">←</span>
     <span class="back-label">返回 AI Daily 首页</span>
-    <span class="back-cmd">cd ~/news</span>
   </a>
 
   <div class="md article-head">
@@ -68,14 +67,12 @@ const jsonLd = {
           <a class="tag" href={tagUrl(tag)}>#{tag}</a>
         </>
       ))}
-      <span class="sep">·</span>
-      <span class="st">status: parsed</span>
     </div>
   </div>
 
   {navItems.length > 1 && (
     <nav class="article-index" aria-label="今日新闻导航">
-      <div class="cmd"><span class="pr">&gt;</span>tree ./today <span class="flag">--depth=1</span></div>
+      <div class="cmd">本期目录</div>
       <ol>
         {navItems.map((item, index) => (
           <li>
@@ -86,7 +83,7 @@ const jsonLd = {
           </li>
         ))}
       </ol>
-      <div class="index-status">// AI Daily index · output: reading_queue · status: ready</div>
+      <div class="index-status">共 {headings.length} 条</div>
     </nav>
   )}
 
