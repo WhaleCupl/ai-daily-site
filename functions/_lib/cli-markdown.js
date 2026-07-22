@@ -74,6 +74,29 @@ export function convertCliMarkdown(raw, date) {
   }
   let body = cleaned.slice(startMatch).trim();
 
+  // 3.5 新编号风归一化：把「## 01 MODEL」这种分类标签小节改写成「## ❯ 真标题」，
+  //     真标题取其后第一条独占整行的 **加粗** 行，并删掉那条加粗行（否则前台会重复渲染，
+  //     且模板生成的「本期目录」只会显示分类标签而非新闻标题）。
+  {
+    const bodyLines = body.split('\n');
+    const normalized = [];
+    for (let i = 0; i < bodyLines.length; i++) {
+      const line = bodyLines[i];
+      if (/^##\s+\d+\s+\S+\s*$/.test(line)) {
+        let j = i + 1;
+        while (j < bodyLines.length && bodyLines[j].trim() === '') j++;
+        const boldTitle = j < bodyLines.length ? bodyLines[j].match(/^\*\*(.+?)\*\*\s*$/) : null;
+        if (boldTitle) {
+          normalized.push(`## ❯ ${boldTitle[1].trim()}`);
+          i = j; // 跳过中间空行与加粗标题行
+          continue;
+        }
+      }
+      normalized.push(line);
+    }
+    body = normalized.join('\n').trim();
+  }
+
   // 4. 解析头条段落，取 title / summary
   const sections = body.split(/^## /m).slice(1);
   const first = sections[0] || '';
