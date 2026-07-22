@@ -39,7 +39,11 @@ export function isCliMarkdown(raw) {
   // 不以 frontmatter 开头、且能找到至少一个 `## ❯` 段落，就认为是 CLI 风文件。
   const trimmed = raw.trim();
   if (trimmed.startsWith('---')) return false;
-  return /^##\s+❯/m.test(raw);
+  // 老 CLI 风：## ❯ 标题
+  if (/^##\s+❯/m.test(raw)) return true;
+  // 新编号风：小节是「## 01 MODEL」这种编号+分类，且带 `> ▪ SIGNAL` 落点
+  if (/^##\s+\d+\s+\S/m.test(raw) && /^>\s*▪?\s*SIGNAL\b/im.test(raw)) return true;
+  return false;
 }
 
 export function convertCliMarkdown(raw, date) {
@@ -74,11 +78,19 @@ export function convertCliMarkdown(raw, date) {
   const sections = body.split(/^## /m).slice(1);
   const first = sections[0] || '';
   const firstLines = first.split('\n');
-  const heading = (firstLines[0] || '').replace(/^❯\s*/, '').trim();
+  let heading = (firstLines[0] || '').replace(/^❯\s*/, '').trim();
+  // 新编号风：小节首行是分类标签（如「01 MODEL」），真正标题在其后第一条独占整行的 **加粗** 行
+  if (/^\d+\s+\S+$/.test(heading)) {
+    const boldMatch = first.match(/^\*\*(.+?)\*\*\s*$/m);
+    if (boldMatch) heading = boldMatch[1].trim();
+  }
   if (!heading) {
     throw new Error('头条段落缺少标题');
   }
-  const signalMatch = first.match(/^>\s*\*\*signal:\*\*\s*([\s\S]*?)\s*$/m);
+  // summary：老风 `> **signal:** ...`，新风 `> ▪ SIGNAL ...`
+  const signalMatch =
+    first.match(/^>\s*\*\*signal:\*\*\s*([\s\S]*?)\s*$/m) ||
+    first.match(/^>\s*▪?\s*SIGNAL\s+([\s\S]*?)\s*$/m);
   const summary = signalMatch ? signalMatch[1].trim() : heading;
 
   // 5. 拼 frontmatter（用 JSON.stringify 保证引号/特殊字符安全，YAML 兼容 JSON 标量）
