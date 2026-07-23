@@ -5,7 +5,7 @@
 // （fine-grained PAT，只需 Contents: Read & write，scope 到本仓库）。
 import yaml from 'js-yaml';
 import { githubConfig, articlePath, putFile, jsonResponse, HttpError } from '../_lib/github.js';
-import { isCliMarkdown, convertCliMarkdown } from '../_lib/cli-markdown.js';
+import { isCliMarkdown, convertCliMarkdown, isPlainMarkdown, convertPlainMarkdown } from '../_lib/cli-markdown.js';
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -35,14 +35,22 @@ export async function onRequestPost(context) {
     ? (raw.match(/^date:\s*["']?(\d{4}-\d{2}-\d{2})/m) || [])[1]
     : null;
   const nameDate = (file.name.match(DATE_RE) || [])[0];
-  const date = fmDate || nameDate || new Date().toISOString().slice(0, 10);
+  // 无 frontmatter 时再兜一层：从正文里（如 H1「· 2026-07-23 ·」）取日期，兜底才用当天。
+  const contentDate = fmDate ? null : (raw.match(DATE_RE) || [])[0];
+  const date = fmDate || nameDate || contentDate || new Date().toISOString().slice(0, 10);
   const filename = `${date}.md`;
 
-  // 「微信/CLI 终端风」文件没有 frontmatter，先自动转换成网站存储格式。
+  // 没有 frontmatter 的文件，按格式自动转换成网站存储格式：
+  //   1)「微信/CLI 终端风」（带 tree/cat 外壳、## ❯ 段落）
+  //   2)「纯 Markdown / 公众号彭博终端风」（# H1 + 分类标记 + ## 新闻标题 + ▮ SIGNAL）
   let content = raw;
-  if (!raw.trim().startsWith('---') && isCliMarkdown(raw)) {
+  if (!raw.trim().startsWith('---')) {
     try {
-      content = convertCliMarkdown(raw, date);
+      if (isCliMarkdown(raw)) {
+        content = convertCliMarkdown(raw, date);
+      } else if (isPlainMarkdown(raw)) {
+        content = convertPlainMarkdown(raw, date);
+      }
     } catch (err) {
       return jsonResponse({ ok: false, error: `自动转换失败：${err.message}` }, 400);
     }
